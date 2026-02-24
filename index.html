@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>電気設計マスター・プロフェッショナル (接地線サイズ自動計算版)</title>
+    <title>電気設計マスター・プロフェッショナル【完全統合版】</title>
     <style>
         :root { 
             --primary: #0f172a; --accent: #2563eb; --danger: #e11d48; 
             --warning: #f59e0b; --success: #10b981; --bg: #f8fafc; 
-            --ground: #16a34a; /* 接地用カラー */
+            --ground: #16a34a; --spec-bg: #f1f5f9;
         }
-        body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #334155; font-size: 13px; }
-        .container { max-width: 1400px; margin: auto; display: grid; grid-template-columns: 450px 1fr; gap: 20px; }
+        body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #334155; font-size: 13px; line-height: 1.4; }
+        .container { max-width: 1600px; margin: auto; display: grid; grid-template-columns: 550px 1fr; gap: 20px; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; height: fit-content; }
         
-        .tab-bar { grid-column: 1 / span 2; display: flex; gap: 5px; margin-bottom: -10px; }
+        .tab-bar { max-width: 1600px; margin: 0 auto 10px auto; display: flex; gap: 5px; }
         .tab-btn { padding: 12px 24px; border: 1px solid #e2e8f0; border-bottom: none; background: #e2e8f0; border-radius: 12px 12px 0 0; cursor: pointer; font-weight: bold; color: #64748b; transition: 0.3s; }
         .tab-btn.active { background: white; color: var(--accent); border-top: 3px solid var(--accent); }
 
@@ -38,41 +38,42 @@
         .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 10px; position: relative; overflow: hidden; }
         .stat-card::before { content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--accent); }
+        .stat-card.fill::before { background: #8b5cf6; }
         .stat-card.ground::before { background: var(--ground); }
         .stat-value { font-size: 1.4rem; font-weight: 800; display: block; color: var(--primary); margin-bottom: 4px; }
         .stat-label { font-size: 0.7rem; color: #64748b; font-weight: bold; }
 
-        .details-container { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .evidence-box { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; }
         .formula-box { font-family: 'Courier New', Courier, monospace; background: #2d3436; color: #dfe6e9; padding: 12px; border-radius: 8px; font-size: 0.8rem; line-height: 1.6; margin-top: 10px; }
-        
-        .btn-print { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
-        .hidden { display: none; }
+        table.spec-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-bottom: 20px; }
+        table.spec-table th, table.spec-table td { border: 1px solid #e2e8f0; padding: 10px; text-align: left; }
+        table.spec-table th { background: #f8fafc; font-weight: bold; color: var(--primary); }
+
+        .btn-print { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
 
         @media print {
-            .card:first-child, .btn-print, .tab-bar { display: none; }
+            .tab-bar, .card:first-child, .btn-print, .spec-container { display: none !important; }
+            #calc-view { display: block !important; }
             .container { display: block; }
-            body { background: white; padding: 0; }
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="tab-bar">
-        <button class="tab-btn active" id="tab-branch" onclick="switchTab('branch')">⚡ 分岐回路</button>
-        <button class="tab-btn" id="tab-feeder" onclick="switchTab('feeder')">🏢 幹線系統</button>
-    </div>
+<div class="tab-bar">
+    <button class="tab-btn active" id="tab-branch" onclick="switchTab('branch')">⚡ 設計計算シミュレーター</button>
+    <button class="tab-btn" id="tab-spec" onclick="switchTab('spec')">📚 JIS・内線規程・仕様解説</button>
+</div>
 
+<div id="calc-view" class="container">
     <div class="card">
-        <h1>⚙️ <span id="ui-title">末端負荷</span> 設計条件</h1>
+        <h1>⚙️ 設計条件設定</h1>
         
         <h2>1. 電源・負荷条件</h2>
         <div class="input-group">
-            <label>配線方式・電圧</label>
+            <label>配線方式</label>
             <select id="sys-type" onchange="calculate()"></select>
             
-            <div id="demand-box" class="hidden" style="margin-top:10px;">
+            <div id="demand-box" style="margin-top:10px; display:none;">
                 <label>需要率 : <span id="val-demand">80</span>%</label>
                 <input type="range" id="demand-rate" min="10" max="100" step="5" value="80" oninput="calculate()">
             </div>
@@ -81,64 +82,78 @@
                 <div>
                     <label>入力モード</label>
                     <div class="mode-selector">
-                        <button class="mode-btn active" id="btn-W" onclick="setMode('W')">W</button>
-                        <button class="mode-btn" id="btn-kW" onclick="setMode('kW')">kW</button>
+                        <button class="mode-btn" id="btn-W" onclick="setMode('W')">W</button>
+                        <button class="mode-btn active" id="btn-kW" onclick="setMode('kW')">kW</button>
                         <button class="mode-btn" id="btn-A" onclick="setMode('A')">A</button>
                     </div>
                 </div>
                 <div>
                     <label>負荷値</label>
-                    <input type="number" id="main-input" value="1500" oninput="calculate()">
+                    <input type="number" id="main-input" value="1.5" step="0.1" oninput="calculate()">
                 </div>
             </div>
             <label style="margin-top:10px;">力率 (cos φ) : <span id="val-pf">100</span>%</label>
             <input type="range" id="pf-percent" min="50" max="100" step="1" value="100" oninput="calculate()">
         </div>
 
-        <h2>2. 環境・施工条件</h2>
+        <h2>2. 電線設計</h2>
+        <div class="input-group">
+            <label>電線種別 (エコ名称併記)</label>
+            <select id="wire-cat" onchange="updateSizes()"></select>
+            
+            <div class="grid-2" style="margin-top:8px;">
+                <div>
+                    <label>サイズ (1.6mm〜325SQ)</label>
+                    <select id="wire-size" onchange="calculate()"></select>
+                </div>
+                <div>
+                    <label>並列本数 (低減係数0.88)</label>
+                    <select id="parallel-n" onchange="calculate()">
+                        <option value="1">1 (単独)</option>
+                        <option value="2">2本並列</option>
+                        <option value="3">3本並列</option>
+                        <option value="4">4本並列</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="margin-top:10px;">
+                <label>配線長 (m) : <span id="val-length" style="color:var(--accent)">20</span>m</label>
+                <input type="range" id="length-range" min="1" max="500" value="20" oninput="syncLength(this.value, 'range')">
+                <input type="number" id="length-num" min="1" max="500" value="20" style="margin-top:5px;" oninput="syncLength(this.value, 'num')">
+            </div>
+        </div>
+
+        <h2>3. 施工環境・配管選定</h2>
         <div class="input-group">
             <div class="grid-2">
                 <div>
                     <label>周囲温度 (℃)</label>
                     <select id="temp" onchange="calculate()">
-                        <option value="30">30℃以下</option>
-                        <option value="40" selected>40℃</option>
-                        <option value="50">50℃</option>
+                        <option value="30">30℃以下 (1.0)</option>
+                        <option value="40" selected>40℃ (0.82)</option>
+                        <option value="50">50℃ (0.58)</option>
                     </select>
                 </div>
                 <div>
-                    <label>同一管内・束線数</label>
+                    <label>束線減少係数</label>
                     <select id="bundle" onchange="calculate()">
-                        <option value="1">1 (単独)</option>
-                        <option value="3">2〜3本</option>
-                        <option value="4">4本</option>
-                        <option value="6">5〜6本</option>
+                        <option value="1">1 (単独: 1.0)</option>
+                        <option value="3">2〜3本 (0.7)</option>
+                        <option value="4">4本 (0.63)</option>
+                        <option value="6">5〜6本 (0.56)</option>
                     </select>
                 </div>
             </div>
-        </div>
-
-        <h2>3. 電線・ケーブル選定</h2>
-        <div class="input-group">
-            <label>電線種別 (仕様書準拠)</label>
-            <select id="wire-cat" onchange="updateSizes()"></select>
-            <label style="margin-top:8px;">サイズ</label>
-            <select id="wire-size" onchange="calculate()"></select>
-            <label style="margin-top:8px;">配線長 : <span id="val-length">20</span>m</label>
-            <input type="range" id="length" min="1" max="500" value="20" oninput="calculate()">
-        </div>
-
-        <h2>4. 配管選定 (G/C/E/PF/CD)</h2>
-        <div class="input-group">
-            <div class="grid-2">
+            <div class="grid-2" style="margin-top:10px;">
                 <div>
-                    <label>配管種別</label>
+                    <label>管種別</label>
                     <select id="conduit-cat" onchange="updateConduitSizes()">
-                        <option value="G">厚鋼電線管 (G)</option>
-                        <option value="C">薄鋼電線管 (C)</option>
-                        <option value="E">ねじなし電線管 (E)</option>
-                        <option value="PF">PF管 (合成樹脂)</option>
-                        <option value="CD">CD管 (埋込用)</option>
+                        <option value="G">厚鋼 (G)</option>
+                        <option value="C">薄鋼 (C)</option>
+                        <option value="E">ねじなし (E)</option>
+                        <option value="PF">PF管</option>
+                        <option value="CD">CD管 (埋込)</option>
                     </select>
                 </div>
                 <div>
@@ -148,9 +163,9 @@
             </div>
         </div>
 
-        <h2>5. 保護機器</h2>
+        <h2>4. 遮断器定格 (AT)</h2>
         <div class="input-group">
-            <label>遮断器定格 (AT)</label>
+            <label>保護遮断器</label>
             <select id="breaker-at" onchange="calculate()"></select>
         </div>
 
@@ -163,151 +178,174 @@
 
         <div class="result-grid">
             <div class="stat-card">
-                <span class="stat-label">設計負荷電流</span>
+                <span class="stat-label">負荷電流 (I)</span>
                 <span class="stat-value" id="res-calc-a">0.00 A</span>
             </div>
             <div class="stat-card">
-                <span class="stat-label">補正後許容電流</span>
+                <span class="stat-label">補正後許容電流 (Iz)</span>
                 <span class="stat-value" id="res-limit-a">0.0 A</span>
             </div>
             <div class="stat-card">
-                <span class="stat-label">電圧降下率</span>
+                <span class="stat-label">電圧降下率 (ΔV)</span>
                 <span class="stat-value" id="res-v-rate">0.0 %</span>
             </div>
+            <div class="stat-card fill">
+                <span class="stat-label">配管占有率 (目標32%)</span>
+                <span class="stat-value" id="res-fill-rate">0.0 %</span>
+            </div>
             <div class="stat-card ground">
-                <span class="stat-label">推奨接地線サイズ</span>
+                <span class="stat-label">自動選定接地線 (E)</span>
                 <span class="stat-value" id="res-ground-size">-</span>
             </div>
             <div class="stat-card">
-                <span class="stat-label">選択中の配管</span>
-                <span class="stat-value" id="res-conduit">-</span>
+                <span class="stat-label">配管内断面積</span>
+                <span class="stat-value" id="res-conduit-area">0 mm²</span>
             </div>
         </div>
 
-        <div class="details-container">
-            <div class="evidence-box">
-                <h2>📋 技術判定・エビデンス</h2>
-                <div id="evidence-list"></div>
-                <h2>🧮 計算式プロセス</h2>
-                <div id="formula-process" class="formula-box"></div>
-            </div>
+        <div class="evidence-box">
+            <h2>📋 技術判定・エビデンス</h2>
+            <div id="evidence-list" style="font-weight: bold; min-height: 50px;"></div>
+            <h2>🧮 計算プロセス詳細</h2>
+            <div id="formula-process" class="formula-box"></div>
         </div>
     </div>
 </div>
 
+<!-- 設計根拠タブ -->
+<div id="spec-view" class="card" style="display:none; margin: 20px auto; max-width: 1400px;">
+    <h1>📘 JIS規格・内線規程 設計基準リファレンス</h1>
+    
+    <div class="spec-item">
+        <h3>1. 電線・ケーブルの種類とJIS規格・特性</h3>
+        <table class="spec-table">
+            <thead>
+                <tr><th>線種名称 (エコ名称)</th><th>JIS規格</th><th>用途</th><th>長所・メリット</th><th>短所・注意点</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>IV (EM-IE)</td><td>JIS C 3307</td><td>一般屋内配線、制御盤</td><td>安価、摩擦が少なく配管挿入が容易</td><td>シースがないため露出不可、耐熱30℃</td></tr>
+                <tr><td>HIV (EM-IC)</td><td>JIS C 3317</td><td>消防設備、非常照明</td><td>耐熱75℃と高く、IVより許容電流が大</td><td>IVに比べ高価、同じく単体露出不可</td></tr>
+                <tr><td>CV (EM-CE)</td><td>JIS C 3605</td><td>動力幹線、一般幹線</td><td>絶縁体(架橋PE)が熱に強く、高許容電流</td><td>曲げ半径の確保が必要、端末処理に手間</td></tr>
+                <tr><td>CVT (EM-CET)</td><td>JIS C 3605</td><td>主幹線、大規模ビル</td><td>単心を撚っているため放熱が良く許容電流最大</td><td>仕上外径が太く、配管サイズが大きくなる</td></tr>
+                <tr><td>VVF (EM-EEF)</td><td>JIS C 3342</td><td>住宅・店舗の分岐回路</td><td>平型で施工性が極めて高い、天井裏ころがし可</td><td>許容電流が低く、物理的衝撃に弱い</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="spec-item">
+        <h3>2. 電線管（配管）の種類と特性比較</h3>
+        <table class="spec-table">
+            <thead>
+                <tr><th>管種略称</th><th>JIS規格</th><th>名称</th><th>主な用途</th><th>長所・短所</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>G管</td><td>JIS C 8305</td><td>厚鋼電線管</td><td>工場、屋外、物理的衝撃場所</td><td>最高強度、電磁シールド。重くネジ切りが必要。</td></tr>
+                <tr><td>C管</td><td>JIS C 8330</td><td>薄鋼電線管</td><td>一般的な屋内配管、天井裏</td><td>G管より軽量。ネジ切り施工が必要。</td></tr>
+                <tr><td>E管</td><td>JIS C 8305</td><td>ねじなし電線管</td><td>ビル、店舗の屋内露出・隠蔽</td><td>ネジ切り不要で施工が早い。強度はG/Cに劣る。</td></tr>
+                <tr><td>PF管</td><td>JIS C 8411</td><td>合成樹脂製可とう管</td><td>二重天井内、隠蔽・露出</td><td>自己消火性があり露出可。曲げが極めて容易。</td></tr>
+                <tr><td>CD管</td><td>JIS C 8411</td><td>合成樹脂製可とう管</td><td>コンクリート埋込専用</td><td>安価、軽量。**非耐燃性のため露出配線は禁止。**</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="spec-item">
+        <h3>3. 内線規程（JEAC 8001）に基づく計算条件</h3>
+        <ul>
+            <li><strong>配管占有率:</strong> 3102-3節。異なる太さ収容時32%以下。同一太さ48%以下。本アプリは安全側の32%を基準。</li>
+            <li><strong>電圧降下:</strong> 1310-1節。分岐回路は2%以内、変圧器から全体で3%以内を推奨。</li>
+            <li><strong>並列接続:</strong> 1360-11節。許容電流に0.88を乗算。同一線種、同一サイズ、同一長さであること。</li>
+            <li><strong>温度補正:</strong> 3103-2表。基準30℃に対し、40℃(0.82)、50℃(0.58)を適用。</li>
+        </ul>
+    </div>
+</div>
+
 <script>
-let currentMode = 'W';
+let currentMode = 'kW';
 let activeTab = 'branch';
 
-// 電線データベース
+// 電線DB
 const db = {
-    "IV (一般ビニル)": [
-        {s:"1.6mm", a:19, r:9.2}, {s:"2.0mm", a:24, r:5.8}, {s:"5.5SQ", a:34, r:3.5}, {s:"8SQ", a:42, r:2.41}, {s:"14SQ", a:61, r:1.36}
+    "IV (EM-IE) / HIV (EM-IC)": [
+        {s:"1.6mm", a:27, r:8.92, area:7.1}, {s:"2.0mm", a:35, r:5.65, area:9.1}, {s:"2.6mm", a:48, r:3.35, area:15.2},
+        {s:"5.5SQ", a:49, r:3.33, area:19.6}, {s:"8SQ", a:61, r:2.31, area:28.3}, {s:"14SQ", a:88, r:1.30, area:45.4},
+        {s:"22SQ", a:115, r:0.824, area:67.9}, {s:"38SQ", a:162, r:0.487, area:104}, {s:"60SQ", a:217, r:0.303, area:163},
+        {s:"100SQ", a:298, r:0.180, area:254}, {s:"150SQ", a:395, r:0.118, area:380}, {s:"200SQ", a:469, r:0.091, area:491},
+        {s:"250SQ", a:556, r:0.072, area:616}, {s:"325SQ", a:650, r:0.056, area:755}
     ],
-    "HIV (耐熱ビニル)": [
-        {s:"1.6mm", a:27, r:9.2}, {s:"2.0mm", a:35, r:5.8}, {s:"5.5SQ", a:49, r:3.5}, {s:"8SQ", a:61, r:2.41}, {s:"14SQ", a:88, r:1.36}
+    "CV (EM-CE) / CVT (EM-CET)": [
+        {s:"2SQ", a:20, r:9.42, area:113}, {s:"3.5SQ", a:27, r:5.38, area:132}, {s:"5.5SQ", a:36, r:3.42, area:154},
+        {s:"8SQ", a:45, r:2.35, area:201}, {s:"14SQ", a:64, r:1.34, area:314}, {s:"22SQ", a:87, r:0.85, area:452},
+        {s:"38SQ", a:120, r:0.49, area:660}, {s:"60SQ", a:160, r:0.31, area:907}, {s:"100SQ", a:220, r:0.18, area:1385},
+        {s:"150SQ", a:290, r:0.12, area:1963}, {s:"200SQ", a:345, r:0.09, area:2551}, {s:"250SQ", a:400, r:0.07, area:3117}, {s:"325SQ", a:475, r:0.06, area:3848}
     ],
-    "EM-IE/IC (エコ耐燃性)": [
-        {s:"1.6mm", a:27, r:9.2}, {s:"2.0mm", a:35, r:5.8}, {s:"5.5SQ", a:49, r:3.5}, {s:"14SQ", a:88, r:1.36}, {s:"22SQ", a:115, r:0.86}
-    ],
-    "CV/EM-CE (2心)": [
-        {s:"2.0SQ", a:25, r:9.42}, {s:"3.5SQ", a:33, r:5.38}, {s:"5.5SQ", a:44, r:3.42}, {s:"8SQ", a:54, r:2.35}, {s:"14SQ", a:77, r:1.34}, {s:"22SQ", a:105, r:0.85}
-    ],
-    "CV/EM-CE (3心)": [
-        {s:"2.0SQ", a:20, r:9.42}, {s:"3.5SQ", a:27, r:5.38}, {s:"5.5SQ", a:36, r:3.42}, {s:"8SQ", a:45, r:2.35}, {s:"14SQ", a:64, r:1.34}, {s:"22SQ", a:87, r:0.85}
-    ],
-    "CVT/EM-CET (トリプレックス)": [
-        {s:"8SQ", a:62/0.82, r:2.31}, {s:"14SQ", a:86/0.82, r:1.30}, {s:"22SQ", a:110/0.82, r:0.824},
-        {s:"38SQ", a:155/0.82, r:0.487}, {s:"60SQ", a:210/0.82, r:0.303}, {s:"100SQ", a:290/0.82, r:0.180},
-        {s:"150SQ", a:380/0.82, r:0.118}, {s:"200SQ", a:465/0.82, r:0.091}, {s:"250SQ", a:535/0.82, r:0.072},
-        {s:"325SQ", a:635/0.82, r:0.055}, {s:"400SQ", a:725/0.82, r:0.044}, {s:"500SQ", a:835/0.82, r:0.035}
+    "VVF (EM-EEF)": [
+        {s:"1.6mm-2C", a:18, r:8.92, area:100}, {s:"1.6mm-3C", a:15, r:8.92, area:110},
+        {s:"2.0mm-2C", a:23, r:5.65, area:120}, {s:"2.0mm-3C", a:20, r:5.65, area:140}
     ]
 };
 
-// 接地線サイズ判定テーブル (内線規程・D種/C種接地)
 const groundingDb = [
-    {at: 20, size: "1.6mm"},
-    {at: 30, size: "2.0mm"},
-    {at: 60, size: "5.5SQ"},
-    {at: 100, size: "8SQ"},
-    {at: 200, size: "14SQ"},
-    {at: 400, size: "22SQ"},
-    {at: 500, size: "38SQ"},
-    {at: 600, size: "60SQ"},
-    {at: 9999, size: "要詳細計算"}
+    {at: 20, size: "1.6mm", area:7.1}, {at: 30, size: "2.0mm", area:9.1}, {at: 60, size: "5.5SQ", area:19.6},
+    {at: 100, size: "8SQ", area:28.3}, {at: 225, size: "14SQ", area:45.4}, {at: 400, size: "22SQ", area:67.9},
+    {at: 600, size: "60SQ", area:163}, {at: 1000, size: "100SQ", area:254}
 ];
 
-const conduitDb = {
-    "G": ["16", "22", "28", "36", "42", "54", "70", "82", "92", "104"],
-    "C": ["19", "25", "31", "39", "51", "63", "75"],
-    "E": ["19", "25", "31", "39", "51", "63", "75"],
-    "PF": ["14", "16", "22", "28", "36", "42", "54"],
-    "CD": ["14", "16", "22", "28", "36", "42", "54"]
+const conduitData = {
+    "G": { "16":211, "22":366, "28":607, "36":957, "42":1333, "54":2198, "70":3495, "82":4791, "92":6027, "104":7806 },
+    "C": { "19":257, "25":445, "31":716, "39":1122, "51":1893, "63":2951, "75":4266 },
+    "E": { "19":281, "25":487, "31":774, "39":1195, "51":1995, "63":3088, "75":4441 },
+    "PF": { "14":154, "16":201, "22":380, "28":616, "36":1018, "42":1385, "54":2290 },
+    "CD": { "14":154, "16":201, "22":380, "28":616, "36":1018, "42":1385, "54":2290 }
 };
 
-const sysOptions = {
-    branch: [{v:"12-100", t:"単相2線 100V"}, {v:"13-200", t:"単相3線 200V"}, {v:"33-200", t:"三相3線 200V"}],
-    feeder: [{v:"13-200", t:"単相3線 200V"}, {v:"33-200", t:"三相3線 200V"}, {v:"33-6600", t:"三相3線 6600V"}]
-};
-
-const tempFactors = { 30: 1.0, 40: 0.82, 50: 0.58 };
-const bundleFactors = { 1: 1.0, 3: 0.7, 4: 0.63, 6: 0.56 };
+const sysOptions = [
+    {v:"12-100", t:"単相2線 100V", cores:2, f:2},
+    {v:"13-200", t:"単相3線 200/100V", cores:2, f:1},
+    {v:"33-200", t:"三相3線 200V", cores:3, f:1.732},
+    {v:"34-400", t:"三相4線 400V/230V", cores:4, f:1}
+];
 
 function switchTab(tab) {
     activeTab = tab;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.add('active');
-    document.getElementById('ui-title').innerText = (tab === 'branch') ? "末端負荷" : "幹線系統";
-    const demandBox = document.getElementById('demand-box');
-    (tab === 'feeder') ? demandBox.classList.remove('hidden') : demandBox.classList.add('hidden');
-    initDropdowns();
+    document.getElementById('calc-view').style.display = tab === 'branch' ? 'grid' : 'none';
+    document.getElementById('spec-view').style.display = tab === 'spec' ? 'block' : 'none';
 }
 
-function initDropdowns() {
-    const sysSel = document.getElementById('sys-type');
-    sysSel.innerHTML = '';
-    sysOptions[activeTab].forEach(opt => {
-        let o = document.createElement('option'); o.value = opt.v; o.innerText = opt.t;
-        sysSel.appendChild(o);
-    });
-
-    const bSel = document.getElementById('breaker-at');
-    bSel.innerHTML = '';
-    [15, 20, 30, 40, 50, 60, 75, 100, 125, 150, 175, 200, 225, 250, 300, 400, 500, 600].forEach(amp => {
-        let opt = document.createElement('option'); opt.value = amp; opt.innerText = amp + " A";
-        bSel.appendChild(opt);
-    });
-    bSel.value = (activeTab === 'branch') ? 20 : 100;
-
-    const catSel = document.getElementById('wire-cat');
-    catSel.innerHTML = '';
-    for (let cat in db) {
-        let opt = document.createElement('option'); opt.value = cat; opt.innerText = cat;
-        catSel.appendChild(opt);
-    }
+function init() {
+    const s1 = document.getElementById('sys-type');
+    sysOptions.forEach(o => s1.add(new Option(o.t, o.v)));
+    const s2 = document.getElementById('wire-cat');
+    for(let k in db) s2.add(new Option(k, k));
+    const s3 = document.getElementById('breaker-at');
+    [15, 20, 30, 40, 50, 60, 75, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 500, 600, 800, 1000].forEach(a => s3.add(new Option(a + " A", a)));
+    s3.value = 20;
     updateSizes();
     updateConduitSizes();
 }
 
+function syncLength(val, origin) {
+    const v = parseFloat(val);
+    if (origin === 'range') document.getElementById('length-num').value = v;
+    else document.getElementById('length-range').value = v;
+    document.getElementById('val-length').innerText = v;
+    calculate();
+}
+
 function updateSizes() {
     const cat = document.getElementById('wire-cat').value;
-    const sizeSel = document.getElementById('wire-size');
-    sizeSel.innerHTML = '';
-    db[cat].forEach((item, idx) => {
-        let opt = document.createElement('option'); opt.value = idx; opt.innerText = item.s;
-        sizeSel.appendChild(opt);
-    });
+    const sel = document.getElementById('wire-size');
+    sel.innerHTML = '';
+    db[cat].forEach((v, i) => sel.add(new Option(v.s, i)));
     calculate();
 }
 
 function updateConduitSizes() {
     const cat = document.getElementById('conduit-cat').value;
-    const sizeSel = document.getElementById('conduit-size');
-    sizeSel.innerHTML = '';
-    conduitDb[cat].forEach(size => {
-        let opt = document.createElement('option'); opt.value = size; opt.innerText = cat + size;
-        sizeSel.appendChild(opt);
-    });
+    const sel = document.getElementById('conduit-size');
+    sel.innerHTML = '';
+    for(let k in conduitData[cat]) sel.add(new Option(cat + k, k));
     calculate();
 }
 
@@ -319,83 +357,76 @@ function setMode(m) {
 }
 
 function calculate() {
-    const sys = document.getElementById('sys-type').value;
-    const loadVal = parseFloat(document.getElementById('main-input').value) || 0;
+    const sys = sysOptions[document.getElementById('sys-type').selectedIndex];
+    const rawInput = parseFloat(document.getElementById('main-input').value) || 0;
     const pf_d = parseFloat(document.getElementById('pf-percent').value) / 100;
-    const demand_d = parseFloat(document.getElementById('demand-rate').value) / 100;
-    const length = parseFloat(document.getElementById('length').value);
-    const temp = document.getElementById('temp').value;
-    const bundle = document.getElementById('bundle').value;
+    const length = parseFloat(document.getElementById('length-num').value);
     const breakerAT = parseFloat(document.getElementById('breaker-at').value);
     const cat = document.getElementById('wire-cat').value;
-    const wireIdx = document.getElementById('wire-size').value;
-    const selectedWire = db[cat][wireIdx];
-    const conduitCat = document.getElementById('conduit-cat').value;
-    const conduitSize = document.getElementById('conduit-size').value;
+    const wire = db[cat][document.getElementById('wire-size').value];
+    const parallelN = parseInt(document.getElementById('parallel-n').value);
+    const k_temp = { 30:1.0, 40:0.82, 50:0.58 }[document.getElementById('temp').value];
+    const k_bundle = { 1:1.0, 3:0.7, 4:0.63, 6:0.56 }[document.getElementById('bundle').value];
+    const k_parallel = parallelN > 1 ? 0.88 : 1.0; 
 
-    document.getElementById('val-pf').innerText = (pf_d * 100).toFixed(0);
-    document.getElementById('val-demand').innerText = (demand_d * 100).toFixed(0);
-    document.getElementById('val-length').innerText = length;
-
-    let v = parseInt(sys.split('-')[1]);
-    let f = sys.startsWith("33") ? 1.732 : (sys === "13-200" ? 1 : 2);
-    
-    // 1. 負荷電流計算
+    // 1. 負荷電流 (I) 計算
+    let v_calc = parseInt(sys.v.split('-')[1]);
     let I = 0;
-    const effectiveLoad = (activeTab === 'feeder') ? loadVal * demand_d : loadVal;
     if (currentMode === 'A') {
-        I = effectiveLoad;
+        I = rawInput;
     } else {
-        let w = currentMode === 'kW' ? effectiveLoad * 1000 : effectiveLoad;
-        I = w / ( (sys.startsWith("33") ? 1.732 : 1) * v * pf_d );
+        let w = currentMode === 'kW' ? rawInput * 1000 : rawInput;
+        let denom = (sys.v.startsWith('3') ? 1.732 : 1) * v_calc * pf_d;
+        I = denom !== 0 ? w / denom : 0;
     }
     document.getElementById('res-calc-a').innerText = I.toFixed(2) + " A";
 
-    // 2. 許容電流計算
-    const k_temp = tempFactors[temp];
-    const k_bundle = bundleFactors[bundle];
-    const limitA = selectedWire.a * k_temp * k_bundle;
-    document.getElementById('res-limit-a').innerText = limitA.toFixed(1) + " A";
+    // 2. 補正後許容電流 (Iz)
+    const Iz = wire.a * k_temp * k_bundle * parallelN * k_parallel;
+    document.getElementById('res-limit-a').innerText = Iz.toFixed(1) + " A";
 
-    // 3. 電圧降下計算
-    const vDrop = (f * length * I * selectedWire.r) / 1000;
-    const vRate = (vDrop / v) * 100;
+    // 3. 電圧降下率
+    const vRate = ((sys.f * length * I * (wire.r / parallelN)) / 1000 / v_calc) * 100;
     document.getElementById('res-v-rate').innerText = vRate.toFixed(2) + " %";
-    document.getElementById('res-conduit').innerText = conduitCat + conduitSize;
 
-    // 4. 接地線サイズ判定
-    const gSizeObj = groundingDb.find(item => item.at >= breakerAT);
-    const gSize = gSizeObj ? gSizeObj.size : "要検討";
-    document.getElementById('res-ground-size').innerText = gSize;
+    // 4. 接地線サイズ & 占有率
+    const gObj = groundingDb.find(item => item.at >= breakerAT) || groundingDb[groundingDb.length-1];
+    document.getElementById('res-ground-size').innerText = gObj.size;
+
+    let wireArea = (cat.includes("CV") || cat.includes("VVF")) ? (wire.area * parallelN) : (wire.area * sys.cores * parallelN);
+    wireArea += gObj.area; 
+    
+    const pipeArea = conduitData[document.getElementById('conduit-cat').value][document.getElementById('conduit-size').value];
+    const fillRate = (wireArea / pipeArea) * 100;
+    document.getElementById('res-fill-rate').innerText = fillRate.toFixed(1) + " %";
+    document.getElementById('res-conduit-area').innerText = pipeArea + " mm²";
 
     // 5. 判定ロジック
-    const banner = document.getElementById('status-banner');
     const list = document.getElementById('evidence-list');
-    let html = ""; let status = "safe";
+    const banner = document.getElementById('status-banner');
+    let logs = []; let status = "safe";
 
-    if (I > limitA) { html += `<div style="color:red">● 【許容電流】 超過: ${I.toFixed(1)}A > ${limitA.toFixed(1)}A</div>`; status = "danger"; }
-    if (I > breakerAT) { html += `<div style="color:red">● 【遮断器定格】 超過: トリップの恐れ</div>`; status = "danger"; }
-    if (vRate > 3.0) { html += `<div style="color:orange">● 【電圧降下】 3%超過 (設計注意)</div>`; if(status!=="danger") status="warn"; }
-    
-    html += `<div style="color:var(--ground)">● 【接地線】 遮断器AT ${breakerAT}A に基づき ${gSize} を推奨</div>`;
-
-    if (status === "safe" && I <= limitA && I <= breakerAT) {
-        // 安全な場合のメッセージ
+    if (I > breakerAT) { logs.push("❌ 負荷過大: ブレーカー定格(AT)不足"); status = "danger"; }
+    if (breakerAT > Iz) { logs.push("❌ 保護不適合: 遮断器定格(AT)が許容電流(Iz)を超過"); status = "danger"; }
+    if (vRate > 2.0) { 
+        let c = vRate > 3.0 ? "❌" : "⚠️";
+        logs.push(`${c} 電圧降下: ${vRate.toFixed(1)}% (2%以内推奨)`);
+        if(status!=="danger") status = vRate > 3.0 ? "danger" : "warn";
     }
-    
-    list.innerHTML = html;
+    if (fillRate > 32.0) { logs.push("⚠️ 配管占有率: 32%超過 (内線規程注意)"); if(status!=="danger") status="warn"; }
+    if (document.getElementById('conduit-cat').value === "CD") logs.push("ℹ️ CD管: 埋込専用。露出施工禁止。");
+
+    list.innerHTML = logs.length ? logs.join("<br>") : "✅ 保護協調および全ての基準を満たしています";
     banner.className = "status-banner " + status;
     banner.innerText = status === "safe" ? "✅ 設計適正" : (status === "warn" ? "⚠️ 設計注意" : "❌ 設計不適合");
 
-    document.getElementById('formula-process').innerHTML = `
-        設計電流 I = ${I.toFixed(2)}A<br>
-        補正許容電流 = ${selectedWire.a}A(基底) × ${k_temp}(温度) × ${k_bundle}(束線) = <b>${limitA.toFixed(1)}A</b><br>
-        電圧降下 ΔV = (${f} × ${length}m × ${I.toFixed(1)}A × ${selectedWire.r}Ω/km) / 1000 = <b>${vDrop.toFixed(2)}V</b><br>
-        接地線選定根拠 = 遮断器定格 ${breakerAT}A に対する内線規程最小サイズ <b>${gSize}</b>
-    `;
+    document.getElementById('formula-process').innerHTML = 
+        `負荷電流 I: ${I.toFixed(2)}A | 遮断器 In: ${breakerAT}A | 許容電流 Iz: ${Iz.toFixed(1)}A<br>` +
+        `保護条件: I ≦ AT ≦ Iz (${I.toFixed(1)} ≦ ${breakerAT} ≦ ${Iz.toFixed(1)})<br>` +
+        `占有率: (${wireArea.toFixed(1)} / ${pipeArea}) = ${fillRate.toFixed(1)}%`;
 }
 
-window.onload = () => switchTab('branch');
+init();
 </script>
 </body>
 </html>
