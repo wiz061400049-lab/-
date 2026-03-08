@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>電気設計マスター・プロフェッショナル【V5.0 究極統合版】</title>
+    <title>電気設計マスター・プロフェッショナル【V6.0 究極統合・完全版】</title>
     <style>
         :root { 
             --primary: #0f172a; --accent: #2563eb; --danger: #e11d48; 
@@ -35,20 +35,20 @@
         .warn { background: #fffbeb; color: var(--warning); border-color: var(--warning); }
         .danger { background: #fff1f2; color: var(--danger); border-color: var(--danger); }
 
-        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: #fff; border: 1px solid #e2e8f0; padding: 15px; border-radius: 10px; position: relative; overflow: hidden; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: #fff; border: 1px solid #e2e8f0; padding: 12px; border-radius: 10px; position: relative; overflow: hidden; }
         .stat-card::before { content: ""; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--accent); }
+        .stat-card.total-load::before { background: #64748b; }
         .stat-card.fill::before { background: #8b5cf6; }
         .stat-card.ground::before { background: var(--ground); }
-        .stat-value { font-size: 1.4rem; font-weight: 800; display: block; color: var(--primary); margin-bottom: 4px; }
-        .stat-label { font-size: 0.7rem; color: #64748b; font-weight: bold; }
+        .stat-value { font-size: 1.3rem; font-weight: 800; display: block; color: var(--primary); margin-bottom: 2px; }
+        .stat-label { font-size: 0.65rem; color: #64748b; font-weight: bold; }
 
         .evidence-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 10px; }
         .advice-item { margin-bottom: 12px; padding: 10px; border-left: 4px solid #cbd5e1; background: white; border-radius: 0 6px 6px 0; }
         .advice-item.danger-border { border-left-color: var(--danger); }
         .advice-item.warn-border { border-left-color: var(--warning); }
         .advice-header { font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
-        .action-needed { color: var(--accent); font-weight: 800; font-size: 0.9rem; display: block; background: #eff6ff; padding: 5px; border-radius: 4px; }
 
         .formula-box { font-family: 'Consolas', 'Monaco', 'Courier New', monospace; background: #1e293b; color: #f1f5f9; padding: 15px; border-radius: 8px; font-size: 0.85rem; line-height: 1.8; margin-top: 10px; border-left: 5px solid var(--accent); white-space: pre-wrap; }
         .formula-box b { color: #38bdf8; }
@@ -58,8 +58,6 @@
         table.spec-table th { background: #f1f5f9; font-weight: bold; color: var(--primary); }
         .spec-item h3 { font-size: 1.1rem; color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 5px; margin-top: 30px; }
         .summary-box { background: #eff6ff; border: 1px solid var(--accent); padding: 15px; border-radius: 8px; margin-top: 20px; }
-        .summary-box h4 { margin: 0 0 10px 0; color: var(--accent); font-size: 1rem; }
-        .summary-box p { font-size: 0.85rem; margin: 5px 0; }
 
         .btn-print { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 10px; }
 
@@ -83,7 +81,7 @@
     <div class="card">
         <h1>⚙️ 設計条件設定</h1>
         
-        <h2>1. 負荷種別・電源条件</h2>
+        <h2>1. 負荷・電源条件</h2>
         <div class="input-group">
             <label>負荷カテゴリー</label>
             <div class="mode-selector">
@@ -104,15 +102,24 @@
                     </div>
                 </div>
                 <div>
-                    <label>負荷値</label>
+                    <label>設備合計容量 (Total)</label>
                     <input type="number" id="main-input" value="5.5" step="0.1" oninput="calculate()">
                 </div>
             </div>
-            <label style="margin-top:10px;">力率 (cos φ) : <span id="val-pf">90</span>%</label>
-            <input type="range" id="pf-percent" min="50" max="100" step="1" value="90" oninput="calculate()">
+            
+            <div class="grid-2" style="margin-top:10px;">
+                <div>
+                    <label>需要率 (Df) : <span id="val-df">100</span>%</label>
+                    <input type="range" id="df-percent" min="10" max="100" step="5" value="100" oninput="calculate()">
+                </div>
+                <div>
+                    <label>力率 (cos φ) : <span id="val-pf">90</span>%</label>
+                    <input type="range" id="pf-percent" min="50" max="100" step="1" value="90" oninput="calculate()">
+                </div>
+            </div>
         </div>
 
-        <h2>2. 電線・ケーブル選定 (全種網羅)</h2>
+        <h2>2. 電線選定 (JIS/内線規程網羅)</h2>
         <div class="input-group">
             <label>電線種別</label>
             <select id="wire-cat" onchange="updateSizes()"></select>
@@ -144,7 +151,7 @@
                     </select>
                 </div>
                 <div>
-                    <label>管内線本数 (減少係数用)</label>
+                    <label>管内線本数</label>
                     <input type="number" id="wire-count" value="3" min="1" max="50" oninput="calculate()">
                 </div>
             </div>
@@ -181,16 +188,16 @@
         <div id="status-banner" class="status-banner">判定中...</div>
 
         <div class="result-grid">
-            <div class="stat-card"><span class="stat-label">負荷電流 (I)</span><span class="stat-value" id="res-calc-a">0.00 A</span></div>
-            <div class="stat-card"><span class="stat-label">補正後許容電流 (Iz)</span><span class="stat-value" id="res-limit-a">0.0 A</span></div>
-            <div class="stat-card"><span class="stat-label">電圧降下率 (ΔV)</span><span class="stat-value" id="res-v-rate">0.0 %</span></div>
-            <div class="stat-card fill"><span class="stat-label">配管占有率 (32%以下)</span><span class="stat-value" id="res-fill-rate">0.0 %</span></div>
+            <div class="stat-card total-load"><span class="stat-label">設備合計負荷(I total)</span><span class="stat-value" id="res-total-a">0.00 A</span></div>
+            <div class="stat-card"><span class="stat-label">最大需要電流(Iw)</span><span class="stat-value" id="res-calc-a">0.00 A</span></div>
+            <div class="stat-card"><span class="stat-label">許容電流(Iz)</span><span class="stat-value" id="res-limit-a">0.0 A</span></div>
+            <div class="stat-card"><span class="stat-label">電圧降下率(ΔV)</span><span class="stat-value" id="res-v-rate">0.0 %</span></div>
+            <div class="stat-card fill"><span class="stat-label">配管占有率</span><span class="stat-value" id="res-fill-rate">0.0 %</span></div>
             <div class="stat-card ground"><span class="stat-label">接地線サイズ</span><span class="stat-value" id="res-ground-size">-</span></div>
-            <div class="stat-card"><span class="stat-label">減少係数(合計)</span><span class="stat-value" id="res-k-total">0.00</span></div>
         </div>
 
         <div class="evidence-box">
-            <h2>💡 判定エビデンス・アドバイス</h2>
+            <h2>💡 判定エビデンス（負荷比較とアドバイス）</h2>
             <div id="advice-list"></div>
             <h2 style="margin-top:20px;">🧮 計算プロセス詳細（数値根拠）</h2>
             <div id="formula-process" class="formula-box"></div>
@@ -420,6 +427,7 @@ function switchTab(tab) {
 function calculate() {
     const sys = sysOptions[document.getElementById('sys-type').selectedIndex];
     const rawValue = parseFloat(document.getElementById('main-input').value) || 0;
+    const df = parseFloat(document.getElementById('df-percent').value) / 100;
     const pf = parseFloat(document.getElementById('pf-percent').value) / 100;
     const breakerAT = parseFloat(document.getElementById('breaker-at').value);
     const catName = document.getElementById('wire-cat').value;
@@ -428,86 +436,98 @@ function calculate() {
     const parallelN = parseInt(document.getElementById('parallel-n').value);
     const wireCount = parseInt(document.getElementById('wire-count').value);
     const L = parseFloat(document.getElementById('length-num').value);
-    
+
+    document.getElementById('val-df').innerText = (df * 100).toFixed(0);
+    document.getElementById('val-pf').innerText = (pf * 100).toFixed(0);
+
     // 係数
     const k_bundle = getBundleFactor(wireCount);
     const k_temp = getTempFactor(document.getElementById('temp').value);
     const k_parallel = parallelN > 1 ? 0.88 : 1.0;
     const k_total = k_bundle * k_temp;
 
-    // 1. 負荷電流 (I)
-    let I = 0;
+    // 1. 設備合計負荷 (I_total) と 最大需要電流 (Iw)
+    let I_total = 0;
     let v_calc = parseInt(sys.v.split('-')[1]);
-    let loadFormula = "";
+    let root3 = sys.v.startsWith('3') ? 1.732 : 1;
+
     if (currentMode === 'A') {
-        I = rawValue;
-        loadFormula = `直接入力 = <b>${I.toFixed(2)}A</b>`;
+        I_total = rawValue;
     } else {
         let w = currentMode === 'kW' ? rawValue * 1000 : rawValue;
-        let root3 = sys.v.startsWith('3') ? 1.732 : 1;
-        I = w / (root3 * v_calc * pf);
-        loadFormula = `${w}W / (${root3}×${v_calc}V×${pf}) = <b>${I.toFixed(2)}A</b>`;
+        I_total = w / (root3 * v_calc * pf);
     }
+    const Iw = I_total * df;
 
     // 2. 許容電流 (Iz)
     const Iz = wire.a * k_total * parallelN * k_parallel;
-    const izFormula = `${wire.a}A(基本) × ${k_temp.toFixed(2)}(温) × ${k_bundle.toFixed(2)}(束)${parallelN > 1 ? ` × ${parallelN}本 × 0.88(並)` : ""} = <b>${Iz.toFixed(1)}A</b>`;
+    const izFormula = `${wire.a}A(基) × ${k_temp.toFixed(2)}(温) × ${k_bundle.toFixed(2)}(束)${parallelN > 1 ? ` × ${parallelN}本 × 0.88(並)` : ""} = <b>${Iz.toFixed(1)}A</b>`;
 
-    // 3. 電圧降下 (ΔV)
+    // 3. 電圧降下 (ΔV) - 設計電流 Iw 基準
     const R_eff = wire.r / parallelN;
-    const deltaV = (sys.f * L * I * R_eff) / 1000;
+    const deltaV = (sys.f * L * Iw * R_eff) / 1000;
     const vRate = (deltaV / v_calc) * 100;
-    const dvFormula = `(${sys.f}×${L}m×${I.toFixed(2)}A×${R_eff.toFixed(4)}Ω) / 1000 = <b>${deltaV.toFixed(2)}V (${vRate.toFixed(2)}%)</b>`;
+    const dvFormula = `(${sys.f}×${L}m×${Iw.toFixed(2)}A×${R_eff.toFixed(4)}Ω)/1000 = <b>${deltaV.toFixed(2)}V (${vRate.toFixed(2)}%)</b>`;
 
-    // 4. 接地線 & 占有率
+    // 4. 接地 & 占有率
     const gObj = groundingDb.find(g => g.at >= breakerAT) || groundingDb[groundingDb.length-1];
     let wireTotalArea = wire.cable ? (wire.area * parallelN) : (wire.area * sys.cores * parallelN);
     wireTotalArea += gObj.area;
     const pipeArea = conduitData[document.getElementById('conduit-cat').value][document.getElementById('conduit-size').value];
     const fillRate = (wireTotalArea / pipeArea) * 100;
-    const fillFormula = `(電線:${wireTotalArea.toFixed(1)}mm² / 配管:${pipeArea}mm²) × 100 = <b>${fillRate.toFixed(1)}%</b>\n※内訳: ${wire.cable ? `ケーブル1条 ${wire.area}mm²` : `単心線 ${wire.area}mm²×${sys.cores}芯`} × ${parallelN}並列 + 接地 ${gObj.area}mm²`;
+    const fillFormula = `(電線:${wireTotalArea.toFixed(1)}mm² / 配管:${pipeArea}mm²) × 100 = <b>${fillRate.toFixed(1)}%</b>`;
 
-    // 結果出力
-    document.getElementById('res-calc-a').innerText = I.toFixed(2) + " A";
+    // 結果表示
+    document.getElementById('res-total-a').innerText = I_total.toFixed(2) + " A";
+    document.getElementById('res-calc-a').innerText = Iw.toFixed(2) + " A";
     document.getElementById('res-limit-a').innerText = Iz.toFixed(1) + " A";
     document.getElementById('res-v-rate').innerText = vRate.toFixed(2) + " %";
     document.getElementById('res-fill-rate').innerText = fillRate.toFixed(1) + " %";
     document.getElementById('res-ground-size').innerText = gObj.size;
-    document.getElementById('res-k-total').innerText = k_total.toFixed(2);
 
     // 判定
     const adviceBox = document.getElementById('advice-list');
     let adviceHtml = "";
     let status = "safe";
 
-    if (loadType === 'general') {
-        if (I > breakerAT) { status = "danger"; adviceHtml += createAdvice("過負荷保護不備", "負荷電流がATを超えています。", "遮断器定格を上げてください。", "danger"); }
-        if (breakerAT > Iz) { status = "danger"; adviceHtml += createAdvice("保護不適合", "ATが許容電流を超えています。", "電線サイズを大きくしてください。", "danger"); }
-    } else {
-        const minIz = I * (I <= 50 ? 1.25 : 1.1);
-        if (Iz < minIz) { status = "danger"; adviceHtml += createAdvice("モーター規程不足", `内線規程 3701-2 により${minIz.toFixed(1)}A以上の許容電流が必要です。`, "電線サイズをアップしてください。", "danger"); }
-        if (breakerAT > I * 3) { status = "warn"; adviceHtml += createAdvice("遮断器過大", "始動電流を考慮しても3倍以下が推奨されます。", "AT定格を下げてください。", "warn"); }
+    // 容量判定（合計と需要の両方で評価）
+    if (Iz < Iw) {
+        status = "danger";
+        adviceHtml += createAdvice("容量不足", `許容電流(${Iz.toFixed(1)}A)が最大需要電流(${Iw.toFixed(2)}A)を下回っています。`, "電線サイズをアップしてください。", "danger");
+    } else if (Iz < I_total) {
+        status = "warn";
+        adviceHtml += createAdvice("全負荷時余裕なし", `需要率設定時(${Iw.toFixed(2)}A)は適合していますが、設備合計負荷(${I_total.toFixed(2)}A)に対しては許容電流が不足しています。`, "将来の一斉稼働を考慮するならサイズアップを推奨。", "warn");
     }
-    if (vRate > 2.0) { if(status !== "danger") status = "warn"; adviceHtml += createAdvice("電圧降下オーバー", "推奨値2.0%を超えています。", "電線を太くするか距離を短くしてください。", "warn"); }
-    if (fillRate > 32) { if(status !== "danger") status = "warn"; adviceHtml += createAdvice("配管占有率過密", "目標32%を超えています。", "配管サイズを大きくしてください。", "warn"); }
+
+    if (breakerAT < Iw) {
+        status = "danger";
+        adviceHtml += createAdvice("過負荷保護不適合", "ATが需要電流を下回っています。設計上の定格電流でトリップします。", "AT定格を上げてください。", "danger");
+    }
+    if (breakerAT > Iz) {
+        status = "danger";
+        adviceHtml += createAdvice("電線保護不適合", "遮断器定格(AT)が電線の許容電流(Iz)を超えています。", "電線サイズを上げるかATを下げてください。", "danger");
+    }
+    
+    // モーター判定
+    if (loadType === 'motor') {
+        const minIzMot = Iw * (Iw <= 50 ? 1.25 : 1.1);
+        if (Iz < minIzMot) { status = "danger"; adviceHtml += createAdvice("電動機規程不適合", `内線規程3701-2に基づき、${minIzMot.toFixed(1)}A以上の許容電流が必要です。`, "電線を太くしてください。", "danger"); }
+    }
+
+    if (vRate > 2.0) { if(status !== "danger") status = "warn"; adviceHtml += createAdvice("電圧降下オーバー", "推奨値2.0%を超えています。", "サイズアップまたは距離短縮を検討してください。", "warn"); }
+    if (fillRate > 32) { if(status !== "danger") status = "warn"; adviceHtml += createAdvice("配管占有率過密", "目標32%を超えています。入線困難や発熱のリスクがあります。", "配管サイズを上げてください。", "warn"); }
 
     adviceBox.innerHTML = status === "safe" ? "<div style='color:var(--success); font-weight:bold; padding: 10px; background:#ecfdf5; border-radius:6px;'>✅ すべての判定基準（内線規程・JIS）に適合しています。</div>" : adviceHtml;
     document.getElementById('status-banner').className = "status-banner " + status;
     document.getElementById('status-banner').innerText = status === "safe" ? "✅ 設計適正" : (status === "warn" ? "⚠️ 設計注意" : "❌ 設計不適合");
 
-    document.getElementById('formula-process').innerHTML = `1.負荷電流: ${loadFormula}\n2.許容電流: ${izFormula}\n3.電圧降下: ${dvFormula}\n4.占有率: ${fillFormula}`;
+    document.getElementById('formula-process').innerHTML = `■負荷計算\n 設備合計負荷(I total) = ${I_total.toFixed(2)}A\n 需要負荷(Iw) = ${I_total.toFixed(2)}A × 需要率 ${df.toFixed(2)} = <b>${Iw.toFixed(2)}A</b>\n\n■電線能力(Iz)\n ${izFormula}\n\n■電圧降下(ΔV)\n ${dvFormula}\n\n■占有率\n ${fillFormula}`;
 }
 
 function createAdvice(title, message, action, type) {
     const borderClass = type === 'danger' ? 'danger-border' : 'warn-border';
     const icon = type === 'danger' ? '❌' : '⚠️';
     return `<div class="advice-item ${borderClass}"><div class="advice-header">${icon} ${title}</div><div class="advice-text">${message} 🔧改善: <b>${action}</b></div></div>`;
-}
-
-function switchTab(tab) {
-    document.getElementById('calc-view').style.display = tab === 'branch' ? 'grid' : 'none';
-    document.getElementById('spec-view').style.display = tab === 'spec' ? 'block' : 'none';
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.id === 'tab-' + tab));
 }
 
 init();
