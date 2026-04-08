@@ -3,204 +3,1157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文字変換ツール</title>
+    <title>建築基準法 概略検討書</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap');
+
         :root {
-            --bg: #f0f2f5;
-            --surface: #ffffff;
-            --border: #d1d5db;
-            --text: #111827;
-            --text-muted: #6b7280;
-            --primary: #2563eb;
-            --success: #059669;
-            --radius: 8px;
-            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --ink: #1a1a2e;
+            --ink-light: #4a4a6a;
+            --paper: #fafaf7;
+            --paper-warm: #f5f3ee;
+            --accent: #2d6a4f;
+            --accent-light: #52b788;
+            --danger: #c1121f;
+            --warning: #e76f51;
+            --border: #d4cfc4;
+            --rule: #b8b3a8;
+            --shadow: rgba(26,26,46,0.08);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* 外部フォントを使わず、端末の標準フォントを使用 */
         body {
-            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
+            font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background: var(--paper-warm);
+            color: var(--ink);
+            line-height: 1.7;
             min-height: 100vh;
         }
 
-        .container { width: 100%; max-width: 600px; }
-
-        .card {
-            background: var(--surface);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 24px;
+        /* ── 印刷・PDF共通 ── */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+            .wrap { box-shadow: none; }
+            .page-break { page-break-before: always; }
         }
 
-        h1 {
-            font-size: 1.25rem;
-            margin-bottom: 20px;
-            text-align: center;
-            color: var(--primary);
+        /* ── レイアウト ── */
+        .wrap {
+            max-width: 900px;
+            margin: 30px auto;
+            background: var(--paper);
+            box-shadow: 0 4px 40px var(--shadow);
+        }
+
+        /* ── ヘッダー ── */
+        .doc-header {
+            border-bottom: 3px double var(--ink);
+            padding: 28px 36px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        .doc-title-block {}
+        .doc-label {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.25em;
+            color: var(--ink-light);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        .doc-title {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--ink);
+        }
+        .doc-meta {
+            text-align: right;
+            font-size: 0.75rem;
+            color: var(--ink-light);
+            line-height: 1.8;
+        }
+        .doc-meta strong { color: var(--ink); }
+
+        /* ── セクション共通 ── */
+        .section {
+            padding: 24px 36px;
+            border-bottom: 1px solid var(--border);
+        }
+        .section:last-child { border-bottom: none; }
+
+        .sec-heading {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.3em;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--accent-light);
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
         }
-
-        .label {
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            display: block;
+        .sec-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background: var(--accent);
+            color: white;
+            font-size: 0.65rem;
+            border-radius: 50%;
+            flex-shrink: 0;
         }
 
-        textarea {
-            width: 100%;
-            height: 140px;
-            padding: 12px;
-            border: 2px solid var(--border);
-            border-radius: 6px;
-            font-size: 16px;
+        /* ── 入力グリッド ── */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--ink-light);
+            letter-spacing: 0.05em;
+        }
+        .input-sub { font-size: 0.65rem; color: var(--rule); margin-top: -4px; }
+        input[type=number], select, textarea {
+            border: 1px solid var(--border);
+            background: white;
+            padding: 8px 10px;
             font-family: inherit;
-            resize: vertical;
-            outline: none;
-            margin-bottom: 16px;
-        }
-        textarea:focus { border-color: var(--primary); }
-        textarea[readonly] { background: #f9fafb; color: #374151; }
-
-        /* ボタンデザイン */
-        .btn-group { display: flex; gap: 8px; margin-bottom: 24px; }
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
             font-size: 0.9rem;
-            font-weight: bold;
-            transition: opacity 0.2s;
+            color: var(--ink);
+            border-radius: 2px;
+            outline: none;
+            transition: border-color 0.2s;
         }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-success { background: var(--success); color: white; }
-        .btn-ghost { background: #e5e7eb; color: var(--text); }
-        .btn:hover { opacity: 0.85; }
+        input[type=number]:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+        }
+        textarea { resize: vertical; min-height: 60px; }
 
-        .copy-section { position: relative; }
-        .copy-btn {
-            position: absolute;
-            top: -32px;
-            right: 0;
-            background: none;
-            border: none;
-            color: var(--primary);
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 0.8rem;
+        .check-row {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 8px;
+            padding: 8px 12px;
+            background: #f0f7f4;
+            border: 1px solid #c3ddd4;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 0.82rem;
         }
+        .check-row input[type=checkbox] { width: auto; margin: 0; cursor: pointer; }
 
-        /* トースト通知（コピー完了時など） */
-        #toast {
-            position: fixed;
-            bottom: 30px;
-            background: #1f2937;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
+        /* ── ボタン ── */
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            padding: 20px 36px;
+            background: var(--paper-warm);
+            border-top: 1px solid var(--border);
+        }
+        .btn {
+            flex: 2;
+            padding: 14px 20px;
+            font-family: 'Noto Serif JP', serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            background: var(--ink);
+            color: var(--paper);
+            border: none;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn:hover { background: var(--accent); }
+        .btn:active { transform: scale(0.99); }
+        .btn-secondary {
+            flex: 1;
+            background: transparent;
+            color: var(--ink);
+            border: 1px solid var(--border);
+            font-family: 'Noto Sans JP', sans-serif;
+            font-weight: 500;
+            padding: 14px 20px;
+            font-size: 0.85rem;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: 0.2s;
+            letter-spacing: 0.05em;
+        }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ── 結果エリア ── */
+        #results { display: none; }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .result-table th, .result-table td {
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .result-table th {
+            background: var(--paper-warm);
+            font-weight: 700;
+            width: 22%;
+            font-size: 0.78rem;
+            color: var(--ink-light);
+            letter-spacing: 0.05em;
+        }
+        .result-table .law-ref {
+            font-size: 0.68rem;
+            color: var(--rule);
+            display: block;
+            margin-top: 2px;
+        }
+        .calc-box {
+            background: #f8f8f5;
+            border-left: 3px solid var(--accent-light);
+            padding: 8px 12px;
+            font-family: 'Courier New', Consolas, monospace;
             font-size: 0.8rem;
-            display: none;
-            animation: fadeIn 0.3s;
+            color: var(--ink);
+            white-space: pre-wrap;
+            margin-bottom: 6px;
+            border-radius: 0 2px 2px 0;
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .value-big {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--ink);
+        }
+        .value-unit { font-size: 0.75rem; color: var(--ink-light); margin-left: 2px; }
 
-        /* アイコン用SVG */
-        svg { width: 18px; height: 18px; vertical-align: middle; }
+        /* バッジ */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 10px;
+            border-radius: 1px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+        .badge-ok { background: var(--accent); color: white; }
+        .badge-ng { background: var(--danger); color: white; }
+        .badge-warn { background: var(--warning); color: white; }
+        .badge-na { background: var(--rule); color: white; }
+
+        /* 用途制限グリッド */
+        .usage-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 10px;
+        }
+        .usage-col { font-size: 0.82rem; }
+        .usage-col-head {
+            font-weight: 700;
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            padding: 6px 10px;
+            margin-bottom: 8px;
+        }
+        .head-ok { background: var(--accent); color: white; }
+        .head-ng { background: var(--danger); color: white; }
+        .usage-item {
+            padding: 4px 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+        .usage-item:last-child { border-bottom: none; }
+
+        /* 斜線・日影テーブル */
+        .slant-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+        .slant-table th, .slant-table td {
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+        }
+        .slant-table th {
+            background: var(--paper-warm);
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: var(--ink-light);
+        }
+
+        /* 特記事項 */
+        .notes-box {
+            background: #fffef5;
+            border: 1px solid #e8e0c0;
+            border-left: 4px solid var(--warning);
+            padding: 14px 16px;
+            font-size: 0.78rem;
+            line-height: 1.9;
+            color: var(--ink-light);
+            margin-top: 8px;
+        }
+        .notes-box strong { color: var(--ink); }
+
+        .disclaimer {
+            text-align: center;
+            font-size: 0.68rem;
+            color: var(--rule);
+            padding: 14px 36px 20px;
+            letter-spacing: 0.03em;
+        }
+
+        /* 物件名表示 */
+        .property-name-display {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--ink);
+            padding: 10px 0 4px;
+        }
     </style>
 </head>
 <body>
+<div class="wrap" id="pdf-content">
 
-<div class="container">
-    <div class="card">
-        <h1>文字変換ツール（半角・全角）</h1>
+    <!-- ヘッダー -->
+    <div class="doc-header">
+        <div class="doc-title-block">
+            <div class="doc-label">建築基準法</div>
+            <div class="doc-title">概略検討書</div>
+        </div>
+        <div class="doc-meta">
+            作成日：<strong id="today-date"></strong><br>
+            建築基準法に基づく概算検討<br>
+            ※詳細は特定行政庁へご確認ください
+        </div>
+    </div>
 
-        <label class="label">入力エリア</label>
-        <textarea id="inputText" placeholder="ここにテキストを貼り付けてください..."></textarea>
+    <!-- ① 物件情報 -->
+    <div class="section no-print">
+        <div class="sec-heading"><span class="sec-num">1</span>物件・敷地情報</div>
+        <div class="input-grid">
+            <div class="input-group" style="grid-column: 1/-1;">
+                <div class="input-label">物件名 / 備考</div>
+                <input type="text" id="memo" placeholder="例：○○プロジェクト 新築計画">
+            </div>
+            <div class="input-group">
+                <div class="input-label">敷地面積（㎡）</div>
+                <input type="number" id="siteArea" value="200.00" step="0.01" min="0">
+            </div>
+            <div class="input-group">
+                <div class="input-label">前面道路幅員（m）</div>
+                <div class="input-sub">容積率・セットバックの算定に使用</div>
+                <input type="number" id="roadWidth" value="4.0" step="0.1" min="0">
+            </div>
+            <div class="input-group">
+                <div class="input-label">接道長さ（m）</div>
+                <div class="input-sub">法43条接道義務（2m以上必要）</div>
+                <input type="number" id="frontage" value="10.0" step="0.1" min="0">
+            </div>
+            <div class="input-group">
+                <div class="input-label">建物計画高さ（m）</div>
+                <div class="input-sub">斜線・絶対高さ制限の確認に使用</div>
+                <input type="number" id="planHeight" value="9.0" step="0.1" min="0">
+            </div>
+        </div>
+    </div>
 
-        <div class="btn-group">
-            <button class="btn btn-primary" onclick="convertToHalfWidth()">すべて半角</button>
-            <button class="btn btn-success" onclick="convertToFullWidth()">すべて全角</button>
-            <button class="btn btn-ghost" onclick="clearText()">クリア</button>
+    <!-- ② 都市計画制限 -->
+    <div class="section no-print">
+        <div class="sec-heading"><span class="sec-num">2</span>都市計画制限</div>
+        <div class="input-grid">
+            <div class="input-group">
+                <div class="input-label">用途地域（全13種類）</div>
+                <select id="zoning" onchange="updateZoningDefaults()">
+                    <optgroup label="住居系">
+                        <option value="low1">第一種低層住居専用地域</option>
+                        <option value="low2">第二種低層住居専用地域</option>
+                        <option value="mid1">第一種中高層住居専用地域</option>
+                        <option value="mid2">第二種中高層住居専用地域</option>
+                        <option value="res1">第一種住居地域</option>
+                        <option value="res2">第二種住居地域</option>
+                        <option value="qres">準住居地域</option>
+                        <option value="rural">田園住居地域</option>
+                    </optgroup>
+                    <optgroup label="商業系">
+                        <option value="near">近隣商業地域</option>
+                        <option value="comm">商業地域</option>
+                    </optgroup>
+                    <optgroup label="工業系">
+                        <option value="qind">準工業地域</option>
+                        <option value="ind">工業地域</option>
+                        <option value="indx">工業専用地域</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div class="input-group">
+                <div class="input-label">防火指定</div>
+                <select id="fireZone">
+                    <option value="none">指定なし</option>
+                    <option value="semi">準防火地域</option>
+                    <option value="fire">防火地域</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <div class="input-label">主要構造（耐火性能）</div>
+                <select id="structure">
+                    <option value="wood">木造等（非耐火）</option>
+                    <option value="semiFireproof">準耐火構造</option>
+                    <option value="fireproof">耐火構造</option>
+                </select>
+            </div>
+        </div>
+        <div class="input-grid" style="margin-top:16px;">
+            <div class="input-group">
+                <div class="input-label">指定建ぺい率（%）</div>
+                <input type="number" id="bcr" value="60" step="5" min="0" max="100">
+            </div>
+            <div class="input-group">
+                <div class="input-label">指定容積率（%）</div>
+                <input type="number" id="far" value="200" step="50" min="0">
+            </div>
+        </div>
+        <div class="input-grid" style="margin-top:12px;">
+            <label class="check-row">
+                <input type="checkbox" id="isCorner">
+                角地緩和（＋10%）を適用する ※法53条3項・各自治体条例による
+            </label>
+            <label class="check-row">
+                <input type="checkbox" id="hasPark">
+                公園・広場・水面等に接する（建ぺい率緩和）
+            </label>
+        </div>
+    </div>
+
+    <!-- 計算ボタン -->
+    <div class="btn-row no-print">
+        <button class="btn" onclick="mainCalculation()">法規チェックを実行</button>
+        <button class="btn-secondary" id="pdf-button" style="display:none" onclick="generatePDF()">A4 PDF出力</button>
+    </div>
+
+    <!-- 結果 -->
+    <div id="results">
+        <div class="section">
+            <div class="property-name-display" id="prop-name-display"></div>
         </div>
 
-        <div class="copy-section">
-            <label class="label">変換結果</label>
-            <button class="copy-btn" onclick="copyResult()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                コピーする
-            </button>
-            <textarea id="outputText" readonly placeholder="ここに変換後の文字が表示されます"></textarea>
+        <!-- 1. 接道・セットバック -->
+        <div class="section">
+            <div class="sec-heading"><span class="sec-num">1</span>接道・セットバック</div>
+            <table class="result-table">
+                <tr>
+                    <th>接道義務<span class="law-ref">法43条</span></th>
+                    <td>
+                        <div class="calc-box" id="calcFrontage"></div>
+                        判定：<span id="statusFrontage" class="badge"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>セットバック<span class="law-ref">法42条2項</span></th>
+                    <td>
+                        <div class="calc-box" id="calcSetback"></div>
+                        有効敷地面積：<span class="value-big" id="resEffectiveArea"></span><span class="value-unit">㎡</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 2. 建ぺい率・容積率 -->
+        <div class="section">
+            <div class="sec-heading"><span class="sec-num">2</span>面積制限</div>
+            <table class="result-table">
+                <tr>
+                    <th>建ぺい率<span class="law-ref">法53条</span></th>
+                    <td>
+                        <div class="calc-box" id="calcBCR"></div>
+                        適用建ぺい率：<span class="value-big" id="resFinalBCR"></span><span class="value-unit">%</span><br>
+                        最大建築面積：<span class="value-big" id="resMaxBuilding"></span><span class="value-unit">㎡</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>容積率<span class="law-ref">法52条</span></th>
+                    <td>
+                        <div class="calc-box" id="calcFAR"></div>
+                        適用容積率：<span class="value-big" id="resFinalFAR"></span><span class="value-unit">%</span><br>
+                        最大延床面積：<span class="value-big" id="resMaxFloor"></span><span class="value-unit">㎡</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 3. 高さ制限 -->
+        <div class="section">
+            <div class="sec-heading"><span class="sec-num">3</span>高さ制限</div>
+            <table class="slant-table">
+                <thead>
+                    <tr>
+                        <th>制限種別</th>
+                        <th>根拠条文</th>
+                        <th>適用</th>
+                        <th>判定・概要</th>
+                    </tr>
+                </thead>
+                <tbody id="heightTable"></tbody>
+            </table>
+        </div>
+
+        <!-- 4. 用途制限 -->
+        <div class="section">
+            <div class="sec-heading"><span class="sec-num">4</span>用途制限</div>
+            <div style="font-size:0.78rem; color:var(--ink-light); margin-bottom:10px;" id="zoningNameDisplay"></div>
+            <div class="usage-grid">
+                <div class="usage-col">
+                    <div class="usage-col-head head-ok">〇 建築可能な主な用途</div>
+                    <div id="canList"></div>
+                </div>
+                <div class="usage-col">
+                    <div class="usage-col-head head-ng">× 建築不可・制限される用途</div>
+                    <div id="cannotList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. 防火規制 -->
+        <div class="section">
+            <div class="sec-heading"><span class="sec-num">5</span>防火・準防火地域規制</div>
+            <div id="fireSection"></div>
+        </div>
+
+        <!-- 6. 特記事項 -->
+        <div class="section">
+            <div class="sec-heading"><span class="sec-num">6</span>特記事項・確認事項</div>
+            <div class="notes-box" id="legalNotes"></div>
+        </div>
+
+        <div class="disclaimer">
+            本書は建築基準法別表第２の概要に基づく概算検討書であり、全ての制限を網羅したものではありません。<br>
+            地区計画・条例による上乗せ規制、都市計画法第５条第１項に規定する市街化調整区域を除く。<br>
+            詳細な適法性の確認は、特定行政庁または指定確認検査機関へご相談ください。
         </div>
     </div>
 </div>
 
-<div id="toast">コピーしました！</div>
-
 <script>
-    // 半角に変換
-    function convertToHalfWidth() {
-        const val = document.getElementById('inputText').value;
-        const result = val.replace(/[！-～]/g, s => {
-            return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
-        }).replace(/　/g, ' '); // スペースも半角に
-        document.getElementById('outputText').value = result;
+// ══════════════════════════════════════════════════════════
+//  用途地域マスターデータ（全13種）
+// ══════════════════════════════════════════════════════════
+const ZONING = {
+    low1: {
+        name: "第一種低層住居専用地域",
+        type: "res",
+        farCoef: 0.4,
+        defaultBCR: 50, defaultFAR: 100,
+        absoluteHeight: true,    // 絶対高さ制限あり（10m or 12m）
+        northSlant: "5m",         // 北側斜線勾配起点高さ
+        roadSlant: true,
+        adjacentSlant: false,     // 隣地斜線なし
+        shadowReg: true,
+        ok: [
+            "住宅・共同住宅・長屋",
+            "幼稚園・小学校・中学校・高等学校",
+            "図書館・美術館（公益的施設）",
+            "神社・寺院・教会",
+            "診療所・保育所等（150㎡以下かつ2階以下）",
+            "老人ホーム・身体障害者福祉施設等",
+        ],
+        ng: [
+            "店舗・飲食店（全て不可）",
+            "事務所・オフィスビル",
+            "ホテル・旅館",
+            "工場・倉庫",
+            "パチンコ店・カラオケボックス",
+            "劇場・映画館",
+        ]
+    },
+    low2: {
+        name: "第二種低層住居専用地域",
+        type: "res",
+        farCoef: 0.4,
+        defaultBCR: 50, defaultFAR: 100,
+        absoluteHeight: true,
+        northSlant: "5m",
+        roadSlant: true,
+        adjacentSlant: false,
+        shadowReg: true,
+        ok: [
+            "住宅・共同住宅・長屋",
+            "150㎡以下の店舗（日用品販売・食堂・理髪店等）",
+            "幼稚園・小学校・中学校・高等学校",
+            "神社・寺院・教会",
+            "診療所・保育所等（150㎡以下かつ2階以下）",
+        ],
+        ng: [
+            "150㎡超の店舗",
+            "ホテル・旅館",
+            "事務所・オフィスビル",
+            "パチンコ店・カラオケボックス",
+            "工場・倉庫",
+            "劇場・映画館",
+        ]
+    },
+    mid1: {
+        name: "第一種中高層住居専用地域",
+        type: "res",
+        farCoef: 0.4,
+        defaultBCR: 60, defaultFAR: 200,
+        absoluteHeight: false,
+        northSlant: "10m",
+        roadSlant: true,
+        adjacentSlant: true,
+        shadowReg: true,
+        ok: [
+            "住宅・共同住宅・長屋",
+            "500㎡以下の店舗（2階以下）",
+            "大学・専修学校・高等専門学校",
+            "病院",
+            "老人ホーム・社会福祉施設",
+            "幼稚園・小中高校",
+        ],
+        ng: [
+            "500㎡超の店舗",
+            "事務所・オフィスビル",
+            "ホテル・旅館",
+            "パチンコ店・カラオケボックス",
+            "工場",
+        ]
+    },
+    mid2: {
+        name: "第二種中高層住居専用地域",
+        type: "res",
+        farCoef: 0.4,
+        defaultBCR: 60, defaultFAR: 200,
+        absoluteHeight: false,
+        northSlant: "10m",
+        roadSlant: true,
+        adjacentSlant: true,
+        shadowReg: true,
+        ok: [
+            "住宅・共同住宅・長屋",
+            "1,500㎡以下の店舗・事務所（2階以下）",
+            "大学・病院",
+            "老人ホーム・社会福祉施設",
+        ],
+        ng: [
+            "1,500㎡超の店舗・事務所",
+            "ホテル・旅館",
+            "パチンコ店・カラオケボックス",
+            "工場",
+        ]
+    },
+    res1: {
+        name: "第一種住居地域",
+        type: "res",
+        farCoef: 0.4,
+        defaultBCR: 60, defaultFAR: 200,
+        absoluteHeight: false,
+        northSlant: null,
+        roadSlant: true,
+        adjacentSlant: true,
+        shadowReg: true,
+        ok: [
+            "住宅・共同住宅・長屋",
+            "3,000㎡以下の店舗・事務所・ホテル",
+            "大学・病院",
+            "体育館・水泳場（公益目的）",
+        ],
+        ng: [
+            "3,000㎡超の店舗・事務所・ホテル",
+            "パチンコ店・マージャン屋",
+            "カラオケボックス",
+            "劇場・映画館",
+            "危険性のある工場",
+        ]
+    },
+    res2: {
+        name: "第二種住居地域",
+        type: "res",
+        farCoef: 0.4,
+        defaultBCR: 60, defaultFAR: 200,
+        absoluteHeight: false,
+        northSlant: null,
+        roadSlant: true,
+        adjacentSlant: true,
+        shadowReg: true,
+        ok: [
+            "住宅・共同住宅",
+            "店舗・事務所（規模制限なし）",
+            "ホテル・旅館",
+            "パチンコ店・カラオケボックス",
+        ],
+        ng: [
+            "劇場・映画館（客席10,000㎡以上）",
+            "キャバレー・個室付浴場",
+            "危険性の大きい工場",
+        ]
+    },
+    qres: {
+        name: "準住居地域",
+        type: "res",
+        farCoef: 0.4,
+        defaultBCR: 60, defaultFAR: 200,
+        absoluteHeight: false,
+        northSlant: null,
+        roadSlant: true,
+        adjacentSlant: true,
+        shadowReg: true,
+        ok: [
+            "住宅・共同住宅",
+            "店舗・事務所・ホテル",
+            "パチンコ店・カラオケ",
+            "自動車関連施設（ガレージ・整備工場等）",
+            "劇場・映画館（10,000㎡未満）",
+        ],
+        ng: [
+            "キャバレー・個室付浴場",
+            "危険性の大きい工場",
+        ]
+    },
+    rural: {
+        name: "田園住居地域",
+        type: "res",
+        farCoef: 0.4,
+        defaultBCR: 50, defaultFAR: 100,
+        absoluteHeight: true,
+        northSlant: "5m",
+        roadSlant: true,
+        adjacentSlant: false,
+        shadowReg: true,
+        ok: [
+            "住宅・共同住宅・長屋",
+            "農産物直売所・農家レストラン（500㎡以下）",
+            "幼稚園・小中学校",
+            "農業用倉庫・農業の用に供する建築物",
+        ],
+        ng: [
+            "500㎡超の店舗",
+            "事務所・ホテル",
+            "パチンコ店・カラオケ",
+            "工場",
+        ]
+    },
+    near: {
+        name: "近隣商業地域",
+        type: "com",
+        farCoef: 0.6,
+        defaultBCR: 80, defaultFAR: 300,
+        absoluteHeight: false,
+        northSlant: null,
+        roadSlant: true,
+        adjacentSlant: true,
+        shadowReg: true,
+        ok: [
+            "住宅・共同住宅",
+            "店舗・飲食店（規模制限なし）",
+            "ホテル・旅館",
+            "パチンコ店・カラオケ・劇場",
+            "病院・学校",
+            "危険性の少ない工場",
+        ],
+        ng: [
+            "キャバレー・個室付浴場",
+            "危険性の大きい工場",
+        ]
+    },
+    comm: {
+        name: "商業地域",
+        type: "com",
+        farCoef: 0.6,
+        defaultBCR: 80, defaultFAR: 400,
+        absoluteHeight: false,
+        northSlant: null,
+        roadSlant: true,
+        adjacentSlant: true,
+        shadowReg: false,
+        ok: [
+            "住宅・共同住宅",
+            "店舗・飲食店・事務所（制限なし）",
+            "ホテル・旅館",
+            "パチンコ店・カラオケ・劇場・映画館",
+            "キャバレー",
+            "危険性の少ない工場",
+        ],
+        ng: [
+            "個室付浴場（原則禁止）",
+            "危険性の大きい工場・貯蔵施設",
+        ]
+    },
+    qind: {
+        name: "準工業地域",
+        type: "ind",
+        farCoef: 0.6,
+        defaultBCR: 60, defaultFAR: 200,
+        absoluteHeight: false,
+        northSlant: null,
+        roadSlant: true,
+        adjacentSlant: true,
+        shadowReg: true,
+        ok: [
+            "住宅・共同住宅",
+            "工場（危険性の大きいもの・環境悪化のおそれの大きいものを除く）",
+            "店舗・事務所・ホテル",
+            "パチンコ店・カラオケ",
+        ],
+        ng: [
+            "キャバレー・個室付浴場",
+            "危険性の大きい工場・環境悪化のおそれの大きい工場",
+        ]
+    },
+    ind: {
+        name: "工業地域",
+        type: "ind",
+        farCoef: 0.6,
+        defaultBCR: 60, defaultFAR: 200,
+        absoluteHeight: false,
+        northSlant: null,
+        roadSlant: true,
+        adjacentSlant: true,
+        shadowReg: false,
+        ok: [
+            "工場（危険性の大きいものを除く）",
+            "倉庫・物流施設",
+            "住宅・共同住宅",
+            "事務所",
+        ],
+        ng: [
+            "ホテル・旅館",
+            "病院・学校（小中高・大学）",
+            "劇場・映画館",
+            "パチンコ店・カラオケ",
+            "危険性の大きい工場",
+        ]
+    },
+    indx: {
+        name: "工業専用地域",
+        type: "ind",
+        farCoef: 0.6,
+        defaultBCR: 60, defaultFAR: 200,
+        absoluteHeight: false,
+        northSlant: null,
+        roadSlant: true,
+        adjacentSlant: true,
+        shadowReg: false,
+        ok: [
+            "工場（全般、危険性の極めて大きいものを除く）",
+            "倉庫・物流施設",
+            "事務所（工場附属）",
+        ],
+        ng: [
+            "住宅・共同住宅・長屋",
+            "店舗・飲食店",
+            "ホテル・旅館",
+            "病院・学校",
+            "パチンコ店・劇場・映画館",
+        ]
+    }
+};
+
+// 日付
+document.getElementById('today-date').textContent =
+    new Date().toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+
+function updateZoningDefaults() {
+    const key = document.getElementById('zoning').value;
+    const z = ZONING[key];
+    document.getElementById('bcr').value = z.defaultBCR;
+    document.getElementById('far').value = z.defaultFAR;
+}
+
+// ══════════════════════════════════════════════════════════
+//  メイン計算
+// ══════════════════════════════════════════════════════════
+function mainCalculation() {
+    const siteArea    = parseFloat(document.getElementById('siteArea').value);
+    const roadWidth   = parseFloat(document.getElementById('roadWidth').value);
+    const frontage    = parseFloat(document.getElementById('frontage').value);
+    const baseBcr     = parseFloat(document.getElementById('bcr').value);
+    const baseFar     = parseFloat(document.getElementById('far').value);
+    const planHeight  = parseFloat(document.getElementById('planHeight').value);
+    const zoningKey   = document.getElementById('zoning').value;
+    const isCorner    = document.getElementById('isCorner').checked;
+    const hasPark     = document.getElementById('hasPark').checked;
+    const fireZone    = document.getElementById('fireZone').value;
+    const structure   = document.getElementById('structure').value;
+    const memo        = document.getElementById('memo').value;
+
+    if (!siteArea || !roadWidth || !frontage) { alert("有効な数値を入力してください"); return; }
+
+    const z = ZONING[zoningKey];
+
+    // ── 物件名
+    document.getElementById('prop-name-display').textContent = memo || '';
+
+    // ── 1. 接道判定（法43条）
+    document.getElementById('calcFrontage').textContent =
+        `接道長さ：${frontage} m（最低2m以上必要 ／ 法43条）`;
+    const sf = document.getElementById('statusFrontage');
+    sf.textContent = frontage >= 2 ? "接道義務 適合" : "接道義務 不適合";
+    sf.className = `badge ${frontage >= 2 ? 'bg-ok' : 'bg-ng'}`;
+
+    // ── 2. セットバック（法42条2項）
+    let setbackArea = 0, setbackText = '';
+    if (roadWidth < 4.0) {
+        const dist = (4.0 - roadWidth) / 2;
+        setbackArea = dist * frontage;
+        setbackText =
+            `道路幅員 ${roadWidth} m < 4m ／ 中心後退が必要（法42条2項）\n` +
+            `後退距離：(4.0 - ${roadWidth}) / 2 = ${dist.toFixed(2)} m\n` +
+            `セットバック面積：${dist.toFixed(2)} m × ${frontage} m = ${setbackArea.toFixed(2)} ㎡ を除外`;
+    } else {
+        setbackText = `道路幅員 ${roadWidth} m ≥ 4m ／ セットバック不要`;
+    }
+    document.getElementById('calcSetback').textContent = setbackText;
+    const effectiveArea = Math.max(0, siteArea - setbackArea);
+    document.getElementById('resEffectiveArea').textContent = effectiveArea.toFixed(2);
+
+    // ── 3. 建ぺい率（法53条）
+    let bcrBonus = 0, bcrNotes = [];
+    const hasFireBonus =
+        (fireZone === 'fire' && structure === 'fireproof') ||
+        (fireZone === 'semi' && (structure === 'fireproof' || structure === 'semiFireproof'));
+    if (isCorner) { bcrBonus += 10; bcrNotes.push("角地緩和 +10%（法53条3項）"); }
+    if (hasPark)  { bcrBonus += 10; bcrNotes.push("公園等隣接緩和 +10%（法53条3項）"); }
+    if (hasFireBonus) { bcrBonus += 10; bcrNotes.push("防火地域内耐火建築物緩和 +10%（法53条3項）"); }
+
+    let finalBcr = baseBcr + bcrBonus;
+    let bcrFreeFlag = false;
+    if (baseBcr >= 80 && fireZone === 'fire' && structure === 'fireproof') {
+        finalBcr = 100; bcrFreeFlag = true;
+        bcrNotes.push("→ 指定80%＋防火地域内耐火：建ぺい率制限なし（100%）");
+    }
+    if (finalBcr > 100) finalBcr = 100;
+    const maxBuilding = effectiveArea * (finalBcr / 100);
+    document.getElementById('calcBCR').textContent =
+        `指定建ぺい率：${baseBcr}%` +
+        (bcrBonus > 0 ? ` ＋ 緩和：${bcrBonus}%` : '') +
+        ` → 適用：${finalBcr}%\n` +
+        (bcrNotes.length ? bcrNotes.join('\n') : '緩和なし');
+    document.getElementById('resFinalBCR').textContent = finalBcr;
+    document.getElementById('resMaxBuilding').textContent = maxBuilding.toFixed(2);
+
+    // ── 4. 容積率（法52条）
+    const coef = z.farCoef;
+    const roadFarLimit = roadWidth * coef * 100;
+    const finalFar = Math.min(baseFar, roadFarLimit);
+    document.getElementById('calcFAR').textContent =
+        `指定容積率：${baseFar}%\n` +
+        `前面道路制限：${roadWidth} m × ${coef} × 100 = ${roadFarLimit.toFixed(0)}%（法52条2項・${z.type === 'res' ? '住居系4/10' : '商業・工業系6/10'}）\n` +
+        `適用容積率：min(${baseFar}, ${roadFarLimit.toFixed(0)}) = ${finalFar.toFixed(0)}%`;
+    document.getElementById('resFinalFAR').textContent = finalFar.toFixed(0);
+    const maxFloor = effectiveArea * (finalFar / 100);
+    document.getElementById('resMaxFloor').textContent = maxFloor.toFixed(2);
+
+    // ── 5. 高さ制限テーブル
+    buildHeightTable(z, planHeight, roadWidth, baseFar, effectiveArea);
+
+    // ── 6. 用途制限
+    document.getElementById('zoningNameDisplay').textContent =
+        `用途地域：${z.name}（建築基準法別表第２）`;
+    document.getElementById('canList').innerHTML =
+        z.ok.map(s => `<div class="usage-item">〇 ${s}</div>`).join('');
+    document.getElementById('cannotList').innerHTML =
+        z.ng.map(s => `<div class="usage-item">× ${s}</div>`).join('');
+
+    // ── 7. 防火規制
+    buildFireSection(fireZone, structure);
+
+    // ── 8. 特記事項
+    buildLegalNotes(z, roadWidth, isCorner, roadFarLimit, baseFar, planHeight);
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('pdf-button').style.display = 'inline-block';
+    window.scrollTo({ top: document.getElementById('results').offsetTop - 60, behavior: 'smooth' });
+}
+
+// ══════════════════════════════════════════════════════════
+//  高さ制限テーブル生成
+// ══════════════════════════════════════════════════════════
+function buildHeightTable(z, planHeight, roadWidth, baseFar, effArea) {
+    const rows = [];
+
+    // (A) 絶対高さ制限（低層・田園）
+    if (z.absoluteHeight) {
+        const limit = baseFar >= 200 ? 12 : 10; // 10m or 12m
+        const ok = planHeight <= limit;
+        rows.push({
+            name: "絶対高さ制限",
+            law: "法55条",
+            applied: "適用あり",
+            detail: `制限高さ：${limit} m（指定容積率による）／ 計画高さ ${planHeight} m`,
+            ok
+        });
     }
 
-    // 全角に変換
-    function convertToFullWidth() {
-        const val = document.getElementById('inputText').value;
-        const result = val.replace(/[!-~]/g, s => {
-            return String.fromCharCode(s.charCodeAt(0) + 0xFEE0);
-        }).replace(/ /g, '　'); // スペースも全角に
-        document.getElementById('outputText').value = result;
+    // (B) 道路斜線制限（全地域）
+    if (z.roadSlant) {
+        // 簡易計算：前面道路反対側からの水平距離を前面道路幅員と仮定
+        const slope = (z.type === 'res') ? 1.25 : 1.5;
+        const approxLimit = roadWidth * slope;
+        const ok = planHeight <= approxLimit;
+        rows.push({
+            name: "道路斜線制限",
+            law: "法56条1項1号",
+            applied: "適用あり（全地域）",
+            detail: `勾配 1:${slope}（${z.type === 'res' ? '住居系' : '商業・工業系'}）\n概算制限高さ≒道路幅員×${slope} = ${approxLimit.toFixed(1)} m\n※実際は斜線起点からの距離で算定`,
+            ok: null // 詳細算定要
+        });
     }
 
-    // クリア
-    function clearText() {
-        document.getElementById('inputText').value = '';
-        document.getElementById('outputText').value = '';
+    // (C) 隣地斜線制限
+    if (z.adjacentSlant) {
+        const base = (z.type === 'res') ? 20 : 31;
+        const slope = (z.type === 'res') ? 1.25 : 2.5;
+        rows.push({
+            name: "隣地斜線制限",
+            law: "法56条1項2号",
+            applied: "適用あり",
+            detail: `立上り：${base} m + 隣地境界からの距離×${slope}\n※配置計画に応じた個別算定が必要`,
+            ok: null
+        });
+    } else {
+        rows.push({
+            name: "隣地斜線制限",
+            law: "法56条1項2号",
+            applied: "適用なし",
+            detail: `低層住居専用地域・田園住居地域は絶対高さで規制（隣地斜線は不適用）`,
+            ok: true
+        });
     }
 
-    // コピー機能
-    function copyResult() {
-        const out = document.getElementById('outputText');
-        if (!out.value) return;
-
-        out.select();
-        try {
-            document.execCommand('copy');
-            showToast();
-        } catch (err) {
-            alert("コピーに失敗しました");
-        }
+    // (D) 北側斜線制限
+    if (z.northSlant) {
+        const base = (z.northSlant === '5m') ? 5 : 10;
+        rows.push({
+            name: "北側斜線制限",
+            law: "法56条1項3号",
+            applied: "適用あり",
+            detail: `真北方向の隣地境界から立上り ${base} m + 水平距離×1.25\n（${z.northSlant === '5m' ? '低層住居：5m' : '中高層住居：10m'}起点）`,
+            ok: null
+        });
+    } else {
+        rows.push({
+            name: "北側斜線制限",
+            law: "法56条1項3号",
+            applied: "適用なし",
+            detail: `${z.name}は北側斜線制限の対象外`,
+            ok: true
+        });
     }
 
-    // トースト表示
-    function showToast() {
-        const toast = document.getElementById('toast');
-        toast.style.display = 'block';
-        setTimeout(() => {
-            toast.style.display = 'none';
-        }, 2000);
+    // (E) 日影規制
+    if (z.shadowReg) {
+        rows.push({
+            name: "日影規制",
+            law: "法56条の2",
+            applied: "適用あり（地域内条例による）",
+            detail: `対象建築物・規制時間は各自治体条例で定める\n※高さ10m超の建築物は特に要注意`,
+            ok: null
+        });
+    } else {
+        rows.push({
+            name: "日影規制",
+            law: "法56条の2",
+            applied: "適用なし",
+            detail: `${z.name}は日影規制の対象外（商業地域・工業地域等）`,
+            ok: true
+        });
     }
+
+    const html = rows.map(r => {
+        let badge;
+        if (r.ok === true)  badge = `<span class="badge badge-ok">適合</span>`;
+        else if (r.ok === false) badge = `<span class="badge badge-ng">要確認</span>`;
+        else badge = `<span class="badge badge-warn">個別算定要</span>`;
+        return `<tr>
+            <td style="font-weight:700;font-size:0.82rem;">${r.name}</td>
+            <td style="font-size:0.75rem;color:var(--ink-light);">${r.law}</td>
+            <td>${badge}<br><span style="font-size:0.72rem;color:var(--rule);">${r.applied}</span></td>
+            <td><div class="calc-box" style="margin:0;">${r.detail}</div></td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('heightTable').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════
+//  防火規制セクション生成
+// ══════════════════════════════════════════════════════════
+function buildFireSection(fireZone, structure) {
+    const el = document.getElementById('fireSection');
+    if (fireZone === 'none') {
+        el.innerHTML = `<div class="notes-box">防火地域・準防火地域の指定なし。<br>隣地等の状況に応じて、延焼のおそれのある部分（法2条六号）の開口部制限は引き続き確認が必要です。</div>`;
+        return;
+    }
+    const items = [];
+    if (fireZone === 'fire') {
+        items.push("【防火地域】（法61条）");
+        items.push("・階数3以上 または 延床面積100㎡超 → 耐火建築物等とすること");
+        items.push("・階数2以下かつ延床面積100㎡以下 → 耐火建築物または準耐火建築物等とすること");
+        items.push("・看板・広告塔（屋上設置 or 高さ3m超）→ 主要部分は不燃材料（法64条）");
+    } else {
+        items.push("【準防火地域】（法61条）");
+        items.push("・階数4以上 または 延床面積1,500㎡超 → 耐火建築物等とすること");
+        items.push("・階数3 または 延床面積500㎡超1,500㎡以下 → 耐火建築物または準耐火建築物等とすること");
+        items.push("・階数1〜2かつ延床面積500㎡以下 → 延焼のおそれのある部分の開口部等を制限");
+    }
+    items.push("・屋根：不燃材料で造るか葺くこと（法63条）");
+    items.push("・延焼のおそれのある部分の外壁・軒裏 → 防火構造とすること（法62条）");
+    el.innerHTML = `<div class="notes-box">${items.join('<br>')}</div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  特記事項生成
+// ══════════════════════════════════════════════════════════
+function buildLegalNotes(z, roadWidth, isCorner, roadFarLimit, baseFar, planHeight) {
+    const notes = [];
+    notes.push(`<strong>■ 容積率制限</strong>：前面道路幅員 ${roadWidth} m による道路容積率 ${roadFarLimit.toFixed(0)}% が適用されます（法52条2項）。`);
+    if (isCorner) notes.push(`<strong>■ 角地緩和</strong>：各自治体の条例（角地の角度・長さ条件等）を満たす必要があります（法53条3項）。`);
+    if (z.absoluteHeight) notes.push(`<strong>■ 絶対高さ制限</strong>：${z.name}は10m または 12m の制限があります（法55条）。計画前に特定行政庁の指定高さをご確認ください。`);
+    if (z.shadowReg) notes.push(`<strong>■ 日影規制</strong>：条例により規制時間・対象建築物が異なります。高さ10m超の場合は特に要確認（法56条の2）。`);
+    notes.push(`<strong>■ 地区計画・条例</strong>：地区計画・建築協定・景観条例等により、建ぺい率・容積率・高さ・意匠等に上乗せ規制がある場合があります（都計法58条の2）。`);
+    notes.push(`<strong>■ 複数用途地域</strong>：敷地が複数の用途地域にまたがる場合、各部分の制限が個別に適用されます（法91条）。`);
+    notes.push(`<strong>■ 総合設計制度</strong>：公開空地の確保等により容積率の割増が受けられる場合があります（法59条の2）。`);
+    notes.push(`<strong>■ 確認申請</strong>：本書はあくまで概算です。実施設計前に特定行政庁または指定確認検査機関への事前相談を推奨します。`);
+    document.getElementById('legalNotes').innerHTML = notes.join('<br>');
+}
+
+// ══════════════════════════════════════════════════════════
+//  PDF出力
+// ══════════════════════════════════════════════════════════
+function generatePDF() {
+    const btn = document.getElementById('pdf-button');
+    btn.textContent = "生成中...";
+    const opt = {
+        margin: [10, 12, 10, 12],
+        filename: (document.getElementById('memo').value || '建築基準法_概略検討書') + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+    html2pdf().set(opt).from(document.getElementById('pdf-content')).save()
+        .then(() => { btn.textContent = "A4 PDF出力"; });
+}
 </script>
-
 </body>
 </html>
