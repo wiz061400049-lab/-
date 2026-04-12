@@ -376,37 +376,120 @@
                 <div class="input-sub">斜線・絶対高さ制限の確認に使用</div>
                 <input type="number" id="planHeight" value="9.0" step="0.1" min="0">
             </div>
+            <div class="input-group">
+                <div class="input-label">道路境界からの離れ（m）</div>
+                <div class="input-sub">道路斜線断面図の算定に使用</div>
+                <input type="number" id="roadSetbackDist" value="1.0" step="0.1" min="0">
+            </div>
+            <div class="input-group">
+                <div class="input-label">北側隣地境界からの離れ（m）</div>
+                <div class="input-sub">北側斜線断面図の算定に使用</div>
+                <input type="number" id="northSetbackDist" value="1.0" step="0.1" min="0">
+            </div>
         </div>
     </div>
 
     <!-- ② 都市計画制限 -->
     <div class="section no-print">
         <div class="sec-heading"><span class="sec-num">2</span>都市計画制限</div>
-        <div class="input-grid">
-            <div class="input-group">
-                <div class="input-label">用途地域（全13種類）</div>
-                <select id="zoning" onchange="updateZoningDefaults()">
-                    <optgroup label="住居系">
-                        <option value="low1">第一種低層住居専用地域</option>
-                        <option value="low2">第二種低層住居専用地域</option>
-                        <option value="mid1">第一種中高層住居専用地域</option>
-                        <option value="mid2">第二種中高層住居専用地域</option>
-                        <option value="res1">第一種住居地域</option>
-                        <option value="res2">第二種住居地域</option>
-                        <option value="qres">準住居地域</option>
-                        <option value="rural">田園住居地域</option>
-                    </optgroup>
-                    <optgroup label="商業系">
-                        <option value="near">近隣商業地域</option>
-                        <option value="comm">商業地域</option>
-                    </optgroup>
-                    <optgroup label="工業系">
-                        <option value="qind">準工業地域</option>
-                        <option value="ind">工業地域</option>
-                        <option value="indx">工業専用地域</option>
-                    </optgroup>
-                </select>
+
+        <!-- 複数用途地域トグル -->
+        <div style="margin-bottom:14px;">
+            <label class="check-row" style="display:inline-flex;width:auto;gap:8px;">
+                <input type="checkbox" id="multiZoning" onchange="toggleMultiZoning()">
+                <span>複数の用途地域にまたがる敷地（法91条・法52条7項）</span>
+            </label>
+        </div>
+
+        <!-- ── ゾーン①（常時表示）── -->
+        <div style="border:1px solid var(--border);border-radius:2px;padding:14px 16px;margin-bottom:10px;background:#f8fbf9;">
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;color:var(--accent);margin-bottom:10px;" id="zone1Label">用途地域</div>
+            <div class="input-grid">
+                <div class="input-group">
+                    <div class="input-label">用途地域</div>
+                    <select id="zoning" onchange="updateZoningDefaults()">
+                        <optgroup label="住居系">
+                            <option value="low1">第一種低層住居専用地域</option>
+                            <option value="low2">第二種低層住居専用地域</option>
+                            <option value="mid1">第一種中高層住居専用地域</option>
+                            <option value="mid2">第二種中高層住居専用地域</option>
+                            <option value="res1">第一種住居地域</option>
+                            <option value="res2">第二種住居地域</option>
+                            <option value="qres">準住居地域</option>
+                            <option value="rural">田園住居地域</option>
+                        </optgroup>
+                        <optgroup label="商業系">
+                            <option value="near">近隣商業地域</option>
+                            <option value="comm">商業地域</option>
+                        </optgroup>
+                        <optgroup label="工業系">
+                            <option value="qind">準工業地域</option>
+                            <option value="ind">工業地域</option>
+                            <option value="indx">工業専用地域</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <div class="input-label">指定建ぺい率（%）</div>
+                    <input type="number" id="bcr" value="60" step="5" min="0" max="100">
+                </div>
+                <div class="input-group">
+                    <div class="input-label">指定容積率（%）</div>
+                    <input type="number" id="far" value="200" step="50" min="0">
+                </div>
+                <div class="input-group multizone-only" style="display:none;">
+                    <div class="input-label">この地域の敷地面積（㎡）<span style="color:var(--danger);">*</span></div>
+                    <div class="input-sub">合計が敷地全体面積と一致するようにしてください</div>
+                    <input type="number" id="area1" value="100" step="0.01" min="0">
+                </div>
             </div>
+        </div>
+
+        <!-- ── ゾーン②（複数用途時のみ表示）── -->
+        <div id="zone2Block" style="display:none;border:1px solid #c3ddd4;border-radius:2px;padding:14px 16px;margin-bottom:10px;background:#f0f7f4;">
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.12em;color:var(--accent);margin-bottom:10px;">用途地域②</div>
+            <div class="input-grid">
+                <div class="input-group">
+                    <div class="input-label">用途地域</div>
+                    <select id="zoning2" onchange="updateZoningDefaults2()">
+                        <optgroup label="住居系">
+                            <option value="low1">第一種低層住居専用地域</option>
+                            <option value="low2">第二種低層住居専用地域</option>
+                            <option value="mid1">第一種中高層住居専用地域</option>
+                            <option value="mid2" selected>第二種中高層住居専用地域</option>
+                            <option value="res1">第一種住居地域</option>
+                            <option value="res2">第二種住居地域</option>
+                            <option value="qres">準住居地域</option>
+                            <option value="rural">田園住居地域</option>
+                        </optgroup>
+                        <optgroup label="商業系">
+                            <option value="near">近隣商業地域</option>
+                            <option value="comm">商業地域</option>
+                        </optgroup>
+                        <optgroup label="工業系">
+                            <option value="qind">準工業地域</option>
+                            <option value="ind">工業地域</option>
+                            <option value="indx">工業専用地域</option>
+                        </optgroup>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <div class="input-label">指定建ぺい率（%）</div>
+                    <input type="number" id="bcr2" value="60" step="5" min="0" max="100">
+                </div>
+                <div class="input-group">
+                    <div class="input-label">指定容積率（%）</div>
+                    <input type="number" id="far2" value="400" step="50" min="0">
+                </div>
+                <div class="input-group">
+                    <div class="input-label">この地域の敷地面積（㎡）<span style="color:var(--danger);">*</span></div>
+                    <input type="number" id="area2" value="100" step="0.01" min="0">
+                </div>
+            </div>
+        </div>
+
+        <!-- 防火・構造（共通） -->
+        <div class="input-grid" style="margin-top:4px;">
             <div class="input-group">
                 <div class="input-label">防火指定</div>
                 <select id="fireZone">
@@ -422,16 +505,6 @@
                     <option value="semiFireproof">準耐火構造</option>
                     <option value="fireproof">耐火構造</option>
                 </select>
-            </div>
-        </div>
-        <div class="input-grid" style="margin-top:16px;">
-            <div class="input-group">
-                <div class="input-label">指定建ぺい率（%）</div>
-                <input type="number" id="bcr" value="60" step="5" min="0" max="100">
-            </div>
-            <div class="input-group">
-                <div class="input-label">指定容積率（%）</div>
-                <input type="number" id="far" value="200" step="50" min="0">
             </div>
         </div>
         <div class="input-grid" style="margin-top:12px;">
@@ -482,6 +555,8 @@
         <!-- 2. 建ぺい率・容積率 -->
         <div class="section">
             <div class="sec-heading"><span class="sec-num">2</span>面積制限</div>
+            <!-- 複数用途地域の場合に追加表示 -->
+            <div id="multiZoneAreaMap" style="display:none;margin-bottom:12px;"></div>
             <table class="result-table">
                 <tr>
                     <th>建ぺい率<span class="law-ref">法53条</span></th>
@@ -518,10 +593,30 @@
             </table>
         </div>
 
+        <!-- 3b. 概念断面図 -->
+        <div class="section">
+            <div class="sec-heading"><span class="sec-num" style="background:var(--warning);">図</span>概念立面断面図</div>
+            <div style="display:flex; gap:12px; margin-bottom:10px; flex-wrap:wrap;" class="no-print">
+                <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer;">
+                    <input type="checkbox" id="showRoadSlantDiagram" checked onchange="updateDiagram()">
+                    道路斜線を表示
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer;">
+                    <input type="checkbox" id="showNorthSlantDiagram" checked onchange="updateDiagram()">
+                    北側斜線を表示
+                </label>
+            </div>
+            <div id="diagramContainer" style="background:#fff;border:1px solid var(--border);border-radius:2px;padding:12px;overflow-x:auto;">
+                <svg id="slantDiagram" viewBox="0 0 700 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:700px;display:block;margin:0 auto;font-family:'Noto Sans JP',sans-serif;"></svg>
+                <div style="font-size:0.68rem;color:var(--rule);margin-top:6px;text-align:center;" id="diagramLegend"></div>
+            </div>
+        </div>
+
         <!-- 4. 用途制限 -->
         <div class="section">
             <div class="sec-heading"><span class="sec-num">4</span>用途制限</div>
             <div style="font-size:0.78rem; color:var(--ink-light); margin-bottom:10px;" id="zoningNameDisplay"></div>
+            <div id="multiZoneUsageNote" style="display:none;"></div>
             <div class="usage-grid">
                 <div class="usage-col">
                     <div class="usage-col-head head-ok">〇 建築可能な主な用途</div>
@@ -879,6 +974,28 @@ function updateZoningDefaults() {
     document.getElementById('far').value = z.defaultFAR;
 }
 
+function updateZoningDefaults2() {
+    const key = document.getElementById('zoning2').value;
+    const z = ZONING[key];
+    document.getElementById('bcr2').value = z.defaultBCR;
+    document.getElementById('far2').value = z.defaultFAR;
+}
+
+function toggleMultiZoning() {
+    const on = document.getElementById('multiZoning').checked;
+    document.getElementById('zone2Block').style.display = on ? '' : 'none';
+    document.getElementById('zone1Label').textContent = on ? '用途地域①' : '用途地域';
+    document.querySelectorAll('.multizone-only').forEach(el => {
+        el.style.display = on ? '' : 'none';
+    });
+    // area1のデフォルトを敷地面積の半分に
+    if (on) {
+        const sa = parseFloat(document.getElementById('siteArea').value) || 200;
+        document.getElementById('area1').value = (sa / 2).toFixed(2);
+        document.getElementById('area2').value = (sa / 2).toFixed(2);
+    }
+}
+
 // ══════════════════════════════════════════════════════════
 //  メイン計算
 // ══════════════════════════════════════════════════════════
@@ -886,19 +1003,44 @@ function mainCalculation() {
     const siteArea    = parseFloat(document.getElementById('siteArea').value);
     const roadWidth   = parseFloat(document.getElementById('roadWidth').value);
     const frontage    = parseFloat(document.getElementById('frontage').value);
-    const baseBcr     = parseFloat(document.getElementById('bcr').value);
-    const baseFar     = parseFloat(document.getElementById('far').value);
     const planHeight  = parseFloat(document.getElementById('planHeight').value);
-    const zoningKey   = document.getElementById('zoning').value;
     const isCorner    = document.getElementById('isCorner').checked;
     const hasPark     = document.getElementById('hasPark').checked;
     const fireZone    = document.getElementById('fireZone').value;
     const structure   = document.getElementById('structure').value;
     const memo        = document.getElementById('memo').value;
+    const isMulti     = document.getElementById('multiZoning').checked;
 
     if (!siteArea || !roadWidth || !frontage) { alert("有効な数値を入力してください"); return; }
 
-    const z = ZONING[zoningKey];
+    // ── ゾーンデータ組立
+    const zoningKey1 = document.getElementById('zoning').value;
+    const baseBcr1   = parseFloat(document.getElementById('bcr').value);
+    const baseFar1   = parseFloat(document.getElementById('far').value);
+    const z1 = ZONING[zoningKey1];
+
+    let zones, totalArea;
+    if (isMulti) {
+        const area1 = parseFloat(document.getElementById('area1').value) || 0;
+        const area2 = parseFloat(document.getElementById('area2').value) || 0;
+        totalArea = area1 + area2;
+        if (totalArea <= 0) { alert("各地域の面積を入力してください"); return; }
+        const zoningKey2 = document.getElementById('zoning2').value;
+        const baseBcr2   = parseFloat(document.getElementById('bcr2').value);
+        const baseFar2   = parseFloat(document.getElementById('far2').value);
+        const z2 = ZONING[zoningKey2];
+        zones = [
+            { z: z1, key: zoningKey1, bcr: baseBcr1, far: baseFar1, area: area1, ratio: area1 / totalArea },
+            { z: z2, key: zoningKey2, bcr: baseBcr2, far: baseFar2, area: area2, ratio: area2 / totalArea }
+        ];
+    } else {
+        totalArea = siteArea;
+        zones = [{ z: z1, key: zoningKey1, bcr: baseBcr1, far: baseFar1, area: siteArea, ratio: 1.0 }];
+    }
+
+    // 主ゾーン（面積大）
+    const mainZone = [...zones].sort((a, b) => b.area - a.area)[0];
+    const z = mainZone.z;
 
     // ── 物件名
     document.getElementById('prop-name-display').textContent = memo || '';
@@ -927,58 +1069,106 @@ function mainCalculation() {
     document.getElementById('resEffectiveArea').textContent = effectiveArea.toFixed(2);
 
     // ── 3. 建ぺい率（法53条）
+    // 複数ゾーン：加重平均で基準建ぺい率を算定（法53条2項）
+    const baseBcr = isMulti
+        ? zones.reduce((sum, zn) => sum + zn.bcr * zn.ratio, 0)
+        : zones[0].bcr;
+
     let bcrBonus = 0, bcrNotes = [];
     const hasFireBonus =
         (fireZone === 'fire' && structure === 'fireproof') ||
         (fireZone === 'semi' && (structure === 'fireproof' || structure === 'semiFireproof'));
-    if (isCorner) { bcrBonus += 10; bcrNotes.push("角地緩和 +10%（法53条3項）"); }
-    if (hasPark)  { bcrBonus += 10; bcrNotes.push("公園等隣接緩和 +10%（法53条3項）"); }
-    if (hasFireBonus) { bcrBonus += 10; bcrNotes.push("防火地域内耐火建築物緩和 +10%（法53条3項）"); }
+    if (isCorner)    { bcrBonus += 10; bcrNotes.push("角地緩和 +10%（法53条3項）"); }
+    if (hasPark)     { bcrBonus += 10; bcrNotes.push("公園等隣接緩和 +10%（法53条3項）"); }
+    if (hasFireBonus){ bcrBonus += 10; bcrNotes.push("防火地域内耐火建築物緩和 +10%（法53条3項）"); }
 
     let finalBcr = baseBcr + bcrBonus;
-    let bcrFreeFlag = false;
     if (baseBcr >= 80 && fireZone === 'fire' && structure === 'fireproof') {
-        finalBcr = 100; bcrFreeFlag = true;
+        finalBcr = 100;
         bcrNotes.push("→ 指定80%＋防火地域内耐火：建ぺい率制限なし（100%）");
     }
     if (finalBcr > 100) finalBcr = 100;
     const maxBuilding = effectiveArea * (finalBcr / 100);
-    document.getElementById('calcBCR').textContent =
-        `指定建ぺい率：${baseBcr}%` +
-        (bcrBonus > 0 ? ` ＋ 緩和：${bcrBonus}%` : '') +
-        ` → 適用：${finalBcr}%\n` +
-        (bcrNotes.length ? bcrNotes.join('\n') : '緩和なし');
-    document.getElementById('resFinalBCR').textContent = finalBcr;
+
+    let bcrCalcText = '';
+    if (isMulti) {
+        bcrCalcText = zones.map(zn =>
+            `  ${zn.z.name}：${zn.bcr}% × ${zn.area.toFixed(1)}㎡ = ${(zn.bcr * zn.area).toFixed(1)}`
+        ).join('\n');
+        bcrCalcText = `加重平均建ぺい率（法53条2項）\n${bcrCalcText}\n→ 基準建ぺい率：${baseBcr.toFixed(1)}%`;
+    } else {
+        bcrCalcText = `指定建ぺい率：${baseBcr}%`;
+    }
+    bcrCalcText += (bcrBonus > 0 ? ` ＋ 緩和：${bcrBonus}%` : '') + ` → 適用：${finalBcr.toFixed(1)}%\n`;
+    bcrCalcText += bcrNotes.length ? bcrNotes.join('\n') : '緩和なし';
+
+    document.getElementById('calcBCR').textContent = bcrCalcText;
+    document.getElementById('resFinalBCR').textContent = finalBcr.toFixed(1);
     document.getElementById('resMaxBuilding').textContent = maxBuilding.toFixed(2);
 
-    // ── 4. 容積率（法52条）
-    const coef = z.farCoef;
+    // ── 4. 容積率（法52条・7項）
+    // 複数ゾーン：各ゾーンの容積率を加重平均（法52条7項）
+    const baseFar = isMulti
+        ? zones.reduce((sum, zn) => sum + zn.far * zn.ratio, 0)
+        : zones[0].far;
+
+    // 前面道路制限：最も厳しい（住居系ゾーンが1つでもあれば4/10）
+    const hasRes = zones.some(zn => zn.z.type === 'res');
+    const coef = hasRes ? 0.4 : 0.6;
     const roadFarLimit = roadWidth * coef * 100;
     const finalFar = Math.min(baseFar, roadFarLimit);
-    document.getElementById('calcFAR').textContent =
-        `指定容積率：${baseFar}%\n` +
-        `前面道路制限：${roadWidth} m × ${coef} × 100 = ${roadFarLimit.toFixed(0)}%（法52条2項・${z.type === 'res' ? '住居系4/10' : '商業・工業系6/10'}）\n` +
-        `適用容積率：min(${baseFar}, ${roadFarLimit.toFixed(0)}) = ${finalFar.toFixed(0)}%`;
-    document.getElementById('resFinalFAR').textContent = finalFar.toFixed(0);
+
+    let farCalcText = '';
+    if (isMulti) {
+        farCalcText = zones.map(zn =>
+            `  ${zn.z.name}：${zn.far}% × ${zn.area.toFixed(1)}㎡ = ${(zn.far * zn.area).toFixed(1)}`
+        ).join('\n');
+        farCalcText = `加重平均容積率（法52条7項）\n${farCalcText}\n→ 基準容積率：${baseFar.toFixed(1)}%\n`;
+    } else {
+        farCalcText = `指定容積率：${baseFar}%\n`;
+    }
+    farCalcText += `前面道路制限：${roadWidth}m × ${coef} × 100 = ${roadFarLimit.toFixed(0)}%（${hasRes ? '住居系4/10' : '商業・工業系6/10'}）\n`;
+    farCalcText += `適用容積率：min(${baseFar.toFixed(1)}, ${roadFarLimit.toFixed(0)}) = ${finalFar.toFixed(1)}%`;
+
+    document.getElementById('calcFAR').textContent = farCalcText;
+    document.getElementById('resFinalFAR').textContent = finalFar.toFixed(1);
     const maxFloor = effectiveArea * (finalFar / 100);
     document.getElementById('resMaxFloor').textContent = maxFloor.toFixed(2);
 
-    // ── 5. 高さ制限テーブル
-    buildHeightTable(z, planHeight, roadWidth, baseFar, effectiveArea);
+    // 複数用途地域の敷地マップ表示
+    buildMultiZoneMap(zones, isMulti, effectiveArea, finalBcr, finalFar);
 
-    // ── 6. 用途制限
-    document.getElementById('zoningNameDisplay').textContent =
-        `用途地域：${z.name}（建築基準法別表第２）`;
-    document.getElementById('canList').innerHTML =
-        z.ok.map(s => `<div class="usage-item">〇 ${s}</div>`).join('');
-    document.getElementById('cannotList').innerHTML =
-        z.ng.map(s => `<div class="usage-item">× ${s}</div>`).join('');
+    // ── 5. 高さ制限テーブル（主ゾーン基準 + 各ゾーン個別）
+    const roadSetbackDist  = parseFloat(document.getElementById('roadSetbackDist').value) || 1.0;
+    const northSetbackDist = parseFloat(document.getElementById('northSetbackDist').value) || 1.0;
+    buildHeightTable(z, planHeight, roadWidth, baseFar, effectiveArea, roadSetbackDist, northSetbackDist, isMulti ? zones : null);
+    drawSlantDiagram(z, planHeight, roadWidth, roadSetbackDist, northSetbackDist);
+
+    // ── 6. 用途制限（面積大のゾーンを適用：法91条）
+    const zoningNameText = isMulti
+        ? `用途制限は面積の大きい地域（${mainZone.z.name}）を敷地全体に適用（法91条）`
+        : `用途地域：${z.name}（建築基準法別表第２）`;
+    document.getElementById('zoningNameDisplay').textContent = zoningNameText;
+
+    if (isMulti) {
+        document.getElementById('multiZoneUsageNote').style.display = '';
+        document.getElementById('multiZoneUsageNote').innerHTML =
+            `<div class="notes-box" style="margin-bottom:10px;border-left-color:var(--accent);">` +
+            `<strong>法91条適用：</strong>敷地が複数の用途地域にまたがる場合、<strong>面積の大きい地域の用途制限が敷地全体に適用</strong>されます。<br>` +
+            zones.map(zn => `　${zn.z.name}：${zn.area.toFixed(1)}㎡（${(zn.ratio*100).toFixed(0)}%）`).join('<br>') +
+            `<br>→ 適用：<strong>${mainZone.z.name}</strong></div>`;
+    } else {
+        document.getElementById('multiZoneUsageNote').style.display = 'none';
+    }
+
+    document.getElementById('canList').innerHTML  = z.ok.map(s => `<div class="usage-item">〇 ${s}</div>`).join('');
+    document.getElementById('cannotList').innerHTML = z.ng.map(s => `<div class="usage-item">× ${s}</div>`).join('');
 
     // ── 7. 防火規制
     buildFireSection(fireZone, structure);
 
     // ── 8. 特記事項
-    buildLegalNotes(z, roadWidth, isCorner, roadFarLimit, baseFar, planHeight);
+    buildLegalNotes(z, roadWidth, isCorner, roadFarLimit, baseFar, planHeight, isMulti, zones);
 
     document.getElementById('results').style.display = 'block';
     document.getElementById('pdf-button').style.display = 'inline-block';
@@ -986,36 +1176,116 @@ function mainCalculation() {
 }
 
 // ══════════════════════════════════════════════════════════
+//  複数用途地域 敷地マップ（SVG）
+// ══════════════════════════════════════════════════════════
+function buildMultiZoneMap(zones, isMulti, effArea, finalBcr, finalFar) {
+    const el = document.getElementById('multiZoneAreaMap');
+    if (!isMulti) { el.style.display = 'none'; return; }
+    el.style.display = '';
+
+    const total = zones.reduce((s, z) => s + z.area, 0);
+    const ratio1 = zones[0].area / total;
+    // 面積大 = 用途制限が適用されるゾーン
+    const mainIdx = zones[0].area >= zones[1].area ? 0 : 1;
+    const W = 480, H = 130;
+    const w1 = W * ratio1, w2 = W * (1 - ratio1);
+
+    // ゾーン別スタイル：主ゾーン（適用）は濃い緑、副ゾーンは薄いグリーン
+    const cfg = [
+        {
+            fill:   mainIdx === 0 ? '#2d6a4f' : '#eef7f3',
+            stroke: mainIdx === 0 ? '#1a3d2e' : '#52b788',
+            textFill: mainIdx === 0 ? '#ffffff' : '#52b788',
+            subFill:  mainIdx === 0 ? '#a8d5bf' : '#777',
+            dash:   mainIdx === 0 ? '' : '6,3',
+            sw:     mainIdx === 0 ? 2.5 : 1.5,
+        },
+        {
+            fill:   mainIdx === 1 ? '#2d6a4f' : '#eef7f3',
+            stroke: mainIdx === 1 ? '#1a3d2e' : '#52b788',
+            textFill: mainIdx === 1 ? '#ffffff' : '#52b788',
+            subFill:  mainIdx === 1 ? '#a8d5bf' : '#777',
+            dash:   mainIdx === 1 ? '' : '6,3',
+            sw:     mainIdx === 1 ? 2.5 : 1.5,
+        }
+    ];
+
+    const appliedLabel = (i) => mainIdx === i
+        ? `<tspan font-size="8.5" fill="${cfg[i].subFill}">▶ 用途制限 適用</tspan>`
+        : `<tspan font-size="8.5" fill="${cfg[i].subFill}">（従）</tspan>`;
+
+    el.innerHTML = `
+    <div style="margin-bottom:8px;font-size:0.78rem;font-weight:700;color:var(--ink-light);">敷地内用途地域の区分（概念図）</div>
+    <svg viewBox="0 0 ${W+80} ${H+50}" style="width:100%;max-width:600px;font-family:'Noto Sans JP',sans-serif;" xmlns="http://www.w3.org/2000/svg">
+      <!-- ゾーン① -->
+      <rect x="40" y="10" width="${w1}" height="${H}" fill="${cfg[0].fill}" stroke="${cfg[0].stroke}" stroke-width="${cfg[0].sw}" stroke-dasharray="${cfg[0].dash}"/>
+      <text x="${40+w1/2}" y="${10+H/2-24}" text-anchor="middle" font-size="9.5" font-weight="bold" fill="${cfg[0].textFill}">${zones[0].z.name}</text>
+      <text x="${40+w1/2}" y="${10+H/2-8}" text-anchor="middle" font-size="9.5" fill="${cfg[0].textFill}">BCR:${zones[0].bcr}% / FAR:${zones[0].far}%</text>
+      <text x="${40+w1/2}" y="${10+H/2+9}" text-anchor="middle" font-size="9.5" fill="${cfg[0].subFill}">${zones[0].area.toFixed(1)}㎡（${(ratio1*100).toFixed(0)}%）</text>
+      <text x="${40+w1/2}" y="${10+H/2+26}" text-anchor="middle">${appliedLabel(0)}</text>
+      <!-- ゾーン② -->
+      <rect x="${40+w1}" y="10" width="${w2}" height="${H}" fill="${cfg[1].fill}" stroke="${cfg[1].stroke}" stroke-width="${cfg[1].sw}" stroke-dasharray="${cfg[1].dash}"/>
+      <text x="${40+w1+w2/2}" y="${10+H/2-24}" text-anchor="middle" font-size="9.5" font-weight="bold" fill="${cfg[1].textFill}">${zones[1].z.name}</text>
+      <text x="${40+w1+w2/2}" y="${10+H/2-8}" text-anchor="middle" font-size="9.5" fill="${cfg[1].textFill}">BCR:${zones[1].bcr}% / FAR:${zones[1].far}%</text>
+      <text x="${40+w1+w2/2}" y="${10+H/2+9}" text-anchor="middle" font-size="9.5" fill="${cfg[1].subFill}">${zones[1].area.toFixed(1)}㎡（${((1-ratio1)*100).toFixed(0)}%）</text>
+      <text x="${40+w1+w2/2}" y="${10+H/2+26}" text-anchor="middle">${appliedLabel(1)}</text>
+      <!-- 用途境界ライン -->
+      <line x1="${40+w1}" y1="4" x2="${40+w1}" y2="${H+16}" stroke="#c1121f" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="${40+w1}" y="5" text-anchor="middle" font-size="8.5" fill="#c1121f">用途境界</text>
+      <!-- 道路 -->
+      <rect x="40" y="${H+12}" width="${W}" height="14" fill="#888" rx="0"/>
+      <text x="${40+W/2}" y="${H+22}" text-anchor="middle" font-size="9" fill="white">道路（前面 ${document.getElementById('roadWidth').value}m）</text>
+      <!-- 合計ラベル -->
+      <text x="36" y="${10+H/2}" text-anchor="end" font-size="9" fill="#555">総計</text>
+      <text x="36" y="${10+H/2+12}" text-anchor="end" font-size="9" fill="#555">${total.toFixed(1)}㎡</text>
+      <!-- 凡例 -->
+      <rect x="40" y="${H+32}" width="12" height="10" fill="#2d6a4f"/>
+      <text x="56" y="${H+41}" font-size="9" fill="#333">用途制限 適用地域（面積大）</text>
+      <rect x="200" y="${H+32}" width="12" height="10" fill="#eef7f3" stroke="#52b788" stroke-width="1.5" stroke-dasharray="4,2"/>
+      <text x="216" y="${H+41}" font-size="9" fill="#333">従属地域（面積小）</text>
+    </svg>
+    <div style="font-size:0.72rem;color:var(--rule);margin-top:4px;">
+      ※加重平均後：建ぺい率 <strong>${finalBcr.toFixed(1)}%</strong>（緩和後）／ 容積率 <strong>${finalFar.toFixed(1)}%</strong>（道路制限後）
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
 //  高さ制限テーブル生成
 // ══════════════════════════════════════════════════════════
-function buildHeightTable(z, planHeight, roadWidth, baseFar, effArea) {
+function buildHeightTable(z, planHeight, roadWidth, baseFar, effArea, roadSetbackDist, northSetbackDist, zones) {
     const rows = [];
 
     // (A) 絶対高さ制限（低層・田園）
     if (z.absoluteHeight) {
-        const limit = baseFar >= 200 ? 12 : 10; // 10m or 12m
-        const ok = planHeight <= limit;
         rows.push({
             name: "絶対高さ制限",
             law: "法55条",
             applied: "適用あり",
-            detail: `制限高さ：${limit} m（指定容積率による）／ 計画高さ ${planHeight} m`,
-            ok
+            detail: `制限高さ：10m または 12m\n` +
+                    `※都市計画または特定行政庁の指定により定まります。\n` +
+                    `　一般に指定容積率100%以下 → 10m、200%以下 → 12m が多いですが、\n` +
+                    `　地区計画・条例により異なる場合があるため、特定行政庁へご確認ください。\n` +
+                    `　計画高さ ${planHeight} m との適合は都市計画確認後に判定してください。`,
+            ok: null  // 都市計画確認が必要なため個別算定要
         });
     }
 
     // (B) 道路斜線制限（全地域）
     if (z.roadSlant) {
-        // 簡易計算：前面道路反対側からの水平距離を前面道路幅員と仮定
         const slope = (z.type === 'res') ? 1.25 : 1.5;
-        const approxLimit = roadWidth * slope;
-        const ok = planHeight <= approxLimit;
+        // 斜線起点：道路反対側境界（道路幅員分）+ 敷地内の離れ
+        const horizDist = roadWidth + (roadSetbackDist || 0);
+        const slantLimit = horizDist * slope;
+        const ok = planHeight <= slantLimit;
         rows.push({
             name: "道路斜線制限",
             law: "法56条1項1号",
             applied: "適用あり（全地域）",
-            detail: `勾配 1:${slope}（${z.type === 'res' ? '住居系' : '商業・工業系'}）\n概算制限高さ≒道路幅員×${slope} = ${approxLimit.toFixed(1)} m\n※実際は斜線起点からの距離で算定`,
-            ok: null // 詳細算定要
+            detail: `勾配 1:${slope}（${z.type === 'res' ? '住居系' : '商業・工業系'}）\n` +
+                    `道路幅員：${roadWidth} m ／ 道路境界からの離れ：${roadSetbackDist || 0} m\n` +
+                    `斜線制限高さ = (${roadWidth} + ${roadSetbackDist || 0}) × ${slope} = ${slantLimit.toFixed(2)} m\n` +
+                    `計画高さ ${planHeight} m → ${ok ? '✓ 適合' : '✗ 超過（要見直し）'}`,
+            ok
         });
     }
 
@@ -1043,12 +1313,18 @@ function buildHeightTable(z, planHeight, roadWidth, baseFar, effArea) {
     // (D) 北側斜線制限
     if (z.northSlant) {
         const base = (z.northSlant === '5m') ? 5 : 10;
+        const northLimit = base + (northSetbackDist || 0) * 1.25;
+        const ok = planHeight <= northLimit;
         rows.push({
             name: "北側斜線制限",
             law: "法56条1項3号",
             applied: "適用あり",
-            detail: `真北方向の隣地境界から立上り ${base} m + 水平距離×1.25\n（${z.northSlant === '5m' ? '低層住居：5m' : '中高層住居：10m'}起点）`,
-            ok: null
+            detail: `真北方向の隣地境界から立上り ${base} m + 水平距離×1.25\n` +
+                    `（${z.northSlant === '5m' ? '低層住居：5m' : '中高層住居：10m'}起点）\n` +
+                    `北側境界からの離れ：${northSetbackDist || 0} m\n` +
+                    `斜線制限高さ = ${base} + ${northSetbackDist || 0} × 1.25 = ${northLimit.toFixed(2)} m\n` +
+                    `計画高さ ${planHeight} m → ${ok ? '✓ 適合' : '✗ 超過（要見直し）'}`,
+            ok
         });
     } else {
         rows.push({
@@ -1092,7 +1368,253 @@ function buildHeightTable(z, planHeight, roadWidth, baseFar, effArea) {
         </tr>`;
     }).join('');
 
-    document.getElementById('heightTable').innerHTML = html;
+    // 複数ゾーン時：各ゾーンの高さ制限を追記
+    let multiNote = '';
+    if (zones && zones.length > 1) {
+        multiNote = `<tr>
+            <td colspan="4" style="background:#f0f7f4;padding:10px 14px;font-size:0.78rem;">
+            <strong style="color:var(--accent);">【複数用途地域】高さ制限は用途境界で分かれて適用（法56条）</strong><br>
+            ${zones.map(zn => {
+                const lines = [];
+                if (zn.z.absoluteHeight) {
+                    lines.push(`絶対高さ：10m or 12m（要都市計画確認）`);
+                }
+                if (zn.z.northSlant) {
+                    const base = zn.z.northSlant === '5m' ? 5 : 10;
+                    lines.push(`北側斜線：${base}m起点`);
+                }
+                if (!zn.z.northSlant) lines.push('北側斜線：対象外');
+                return `　<strong>${zn.z.name}</strong>（${zn.area.toFixed(1)}㎡）：${lines.join('、') || '制限なし（道路・隣地斜線のみ）'}`;
+            }).join('<br>')}
+            </td></tr>`;
+    }
+
+    document.getElementById('heightTable').innerHTML = html + multiNote;
+}
+
+// ══════════════════════════════════════════════════════════
+//  概念断面図（SVG）描画
+// ══════════════════════════════════════════════════════════
+let _diagramState = null;
+
+function updateDiagram() {
+    if (_diagramState) {
+        const { z, planHeight, roadWidth, roadSetbackDist, northSetbackDist } = _diagramState;
+        drawSlantDiagram(z, planHeight, roadWidth, roadSetbackDist, northSetbackDist);
+    }
+}
+
+function drawSlantDiagram(z, planHeight, roadWidth, roadSetbackDist, northSetbackDist) {
+    _diagramState = { z, planHeight, roadWidth, roadSetbackDist, northSetbackDist };
+
+    const showRoad  = document.getElementById('showRoadSlantDiagram')?.checked ?? true;
+    const showNorth = document.getElementById('showNorthSlantDiagram')?.checked ?? true;
+
+    const hasRoad  = z.roadSlant && showRoad;
+    const hasNorth = z.northSlant && showNorth;
+
+    // どちらも非表示 or 非適用の場合
+    const panels = [];
+    if (hasRoad)  panels.push('road');
+    if (hasNorth) panels.push('north');
+
+    const svg = document.getElementById('slantDiagram');
+    const W = 700, H = 380;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+    if (panels.length === 0) {
+        svg.innerHTML = `<text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#999" font-size="13">表示する斜線制限がありません</text>`;
+        document.getElementById('diagramLegend').textContent = '';
+        return;
+    }
+
+    const panelW = panels.length === 2 ? W / 2 : W;
+    let svgContent = '';
+
+    panels.forEach((type, idx) => {
+        const ox = idx * panelW; // パネルのX原点
+        svgContent += drawPanel(type, z, planHeight, roadWidth, roadSetbackDist, northSetbackDist, ox, panelW, H);
+    });
+
+    svg.innerHTML = svgContent;
+
+    // 凡例
+    let legends = ['赤実線：斜線制限ライン', '青破線：建物外形'];
+    if (hasRoad)  legends.push('道路斜線は道路の反対側境界から発生');
+    if (hasNorth) legends.push('北側斜線は真北方向の隣地境界から発生');
+    document.getElementById('diagramLegend').textContent = '※ ' + legends.join(' ／ ');
+}
+
+function drawPanel(type, z, planHeight, roadWidth, roadSetbackDist, northSetbackDist, ox, PW, PH) {
+    // ── スケール設定
+    const PAD_L = 30, PAD_R = 20, PAD_T = 30, PAD_B = 55;
+    const drawW = PW - PAD_L - PAD_R;
+    const drawH = PH - PAD_T - PAD_B;
+
+    // 実スケール（m）
+    let totalHorizM, buildOffsetM, buildWidthM, slantOriginM, slopeRatio, baseHeightM;
+
+    if (type === 'road') {
+        const slope = (z.type === 'res') ? 1.25 : 1.5;
+        buildOffsetM   = roadSetbackDist;           // 道路境界から建物前面まで
+        buildWidthM    = Math.max(4, roadWidth * 0.8); // 建物幅（表示用）
+        totalHorizM    = roadWidth + buildOffsetM + buildWidthM + 2;
+        slantOriginM   = 0;                         // 道路反対側（X=0）
+        slopeRatio     = slope;
+        baseHeightM    = 0;
+    } else {
+        // 北側斜線
+        const base = (z.northSlant === '5m') ? 5 : 10;
+        buildOffsetM   = northSetbackDist;           // 北側隣地境界から建物北面まで
+        buildWidthM    = Math.max(4, 6);             // 建物幅（表示用）
+        totalHorizM    = buildOffsetM + buildWidthM + 2;
+        slantOriginM   = 0;                          // 北側隣地境界（X=0）
+        slopeRatio     = 1.25;
+        baseHeightM    = base;
+    }
+
+    // スケール（px/m）
+    const scaleH = drawW / totalHorizM;
+    const maxDisplayH = Math.max(planHeight * 1.3, baseHeightM + (totalHorizM * slopeRatio) * 0.8);
+    const scaleV = drawH / maxDisplayH;
+
+    // 座標変換（実座標→SVG座標）
+    const tx = m => ox + PAD_L + m * scaleH;
+    const ty = m => PH - PAD_B - m * scaleV;
+
+    let out = '';
+
+    // ── パネル背景・枠
+    out += `<rect x="${ox}" y="0" width="${PW}" height="${PH}" fill="#fafaf7"/>`;
+    if (ox > 0) out += `<line x1="${ox}" y1="0" x2="${ox}" y2="${PH}" stroke="#d4cfc4" stroke-width="1"/>`;
+
+    // ── タイトル
+    const title = type === 'road' ? '道路斜線制限（断面）' : '北側斜線制限（断面）';
+    out += `<text x="${ox + PW/2}" y="20" text-anchor="middle" font-size="11" font-weight="bold" fill="#2d6a4f">${title}</text>`;
+
+    // ── 地面ライン
+    out += `<line x1="${tx(0)}" y1="${ty(0)}" x2="${tx(totalHorizM)}" y2="${ty(0)}" stroke="#999" stroke-width="2"/>`;
+    // 地面ハッチング
+    for (let i = 0; i < 8; i++) {
+        const xi = tx(0) + i * (drawW / 8);
+        out += `<line x1="${xi}" y1="${ty(0)}" x2="${xi-8}" y2="${ty(0)+10}" stroke="#bbb" stroke-width="1"/>`;
+    }
+
+    if (type === 'road') {
+        // ── 道路エリア（グレー塗り）
+        const roadEndX = tx(roadWidth);
+        out += `<rect x="${tx(0)}" y="${ty(0)-6}" width="${roadEndX - tx(0)}" height="8" fill="#888" rx="0"/>`;
+        out += `<text x="${(tx(0)+roadEndX)/2}" y="${PH-PAD_B+18}" text-anchor="middle" font-size="9.5" fill="#555">道路 ${roadWidth}m</text>`;
+
+        // 道路境界線（垂直）
+        out += `<line x1="${roadEndX}" y1="${ty(0)-30}" x2="${roadEndX}" y2="${ty(0)+4}" stroke="#555" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+        out += `<text x="${roadEndX+2}" y="${ty(0)-22}" font-size="8.5" fill="#555">道路境界</text>`;
+
+        // 離れ寸法線
+        if (buildOffsetM > 0) {
+            const buildFrontX = tx(roadWidth + buildOffsetM);
+            out += `<line x1="${roadEndX}" y1="${ty(0)-14}" x2="${buildFrontX}" y2="${ty(0)-14}" stroke="#555" stroke-width="1" marker-end="url(#arr)" marker-start="url(#arr)"/>`;
+            out += `<text x="${(roadEndX+buildFrontX)/2}" y="${ty(0)-18}" text-anchor="middle" font-size="9" fill="#555">${buildOffsetM}m</text>`;
+        }
+
+        // 斜線（道路反対側境界 X=0 から）
+        const slope = (z.type === 'res') ? 1.25 : 1.5;
+        const slantReachX = totalHorizM;
+        const slantTopH = slantReachX * slope;
+        out += `<line x1="${tx(0)}" y1="${ty(0)}" x2="${tx(slantReachX)}" y2="${ty(slantTopH)}" stroke="#c1121f" stroke-width="2"/>`;
+        // 勾配ラベル
+        const labelXm = roadWidth * 0.5;
+        const labelYm = labelXm * slope + 1.5;
+        out += `<text x="${tx(labelXm)}" y="${ty(labelYm)}" font-size="10" fill="#c1121f" transform="rotate(${-Math.atan(slope * scaleV / scaleH) * 180 / Math.PI},${tx(labelXm)},${ty(labelYm)})">道路斜線 1:${slope}</text>`;
+
+        // ── 建物（青破線）
+        const bx1 = tx(roadWidth + buildOffsetM);
+        const bx2 = tx(roadWidth + buildOffsetM + buildWidthM);
+        const by1 = ty(planHeight);
+        const by2 = ty(0);
+        out += `<rect x="${bx1}" y="${by1}" width="${bx2-bx1}" height="${by2-by1}" fill="rgba(100,160,230,0.12)" stroke="#4a90d9" stroke-width="1.5" stroke-dasharray="6,3"/>`;
+
+        // 建物高さ寸法
+        out += `<line x1="${bx2+6}" y1="${by2}" x2="${bx2+6}" y2="${by1}" stroke="#333" stroke-width="1"/>`;
+        out += `<line x1="${bx2+3}" y1="${by2}" x2="${bx2+9}" y2="${by2}" stroke="#333" stroke-width="1"/>`;
+        out += `<line x1="${bx2+3}" y1="${by1}" x2="${bx2+9}" y2="${by1}" stroke="#333" stroke-width="1"/>`;
+        out += `<text x="${bx2+10}" y="${(by1+by2)/2+4}" font-size="10" fill="#333">H=${planHeight}m</text>`;
+
+        // 斜線が建物に当たる点（交差チェック）
+        const slantAtBuildFront = (roadWidth + buildOffsetM) * slope;
+        const ok = planHeight <= slantAtBuildFront;
+        const judgeColor = ok ? '#2d6a4f' : '#c1121f';
+        const judgeText  = ok ? `✓ 適合 (制限${slantAtBuildFront.toFixed(1)}m)` : `✗ 超過 (制限${slantAtBuildFront.toFixed(1)}m)`;
+        out += `<text x="${ox+PW/2}" y="${PH-10}" text-anchor="middle" font-size="10" fill="${judgeColor}" font-weight="bold">${judgeText}</text>`;
+
+        // 制限高さの水平線（点線）
+        out += `<line x1="${bx1}" y1="${ty(slantAtBuildFront)}" x2="${bx2+14}" y2="${ty(slantAtBuildFront)}" stroke="#c1121f" stroke-width="1" stroke-dasharray="4,2"/>`;
+        out += `<text x="${bx1-2}" y="${ty(slantAtBuildFront)-3}" font-size="9" fill="#c1121f" text-anchor="end">制限 ${slantAtBuildFront.toFixed(1)}m</text>`;
+
+    } else {
+        // 北側斜線パネル
+        const base = (z.northSlant === '5m') ? 5 : 10;
+        const slope = 1.25;
+
+        // 北側隣地境界線
+        out += `<line x1="${tx(0)}" y1="${ty(0)-30}" x2="${tx(0)}" y2="${ty(0)+4}" stroke="#555" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+        out += `<text x="${tx(0)+3}" y="${ty(0)-20}" font-size="8.5" fill="#555">北側隣地境界</text>`;
+        out += `<text x="${tx(totalHorizM)}" y="${ty(0)+18}" text-anchor="end" font-size="9" fill="#777">（真北方向）</text>`;
+
+        // 離れ寸法線
+        const buildNorthX = tx(buildOffsetM);
+        if (buildOffsetM > 0) {
+            out += `<line x1="${tx(0)}" y1="${ty(0)-14}" x2="${buildNorthX}" y2="${ty(0)-14}" stroke="#555" stroke-width="1"/>`;
+            out += `<text x="${(tx(0)+buildNorthX)/2}" y="${ty(0)-17}" text-anchor="middle" font-size="9" fill="#555">${buildOffsetM}m</text>`;
+        }
+
+        // 北側隣地エリア（薄いグレー）
+        out += `<rect x="${tx(0)-20}" y="${ty(0)-6}" width="22" height="8" fill="#bbb"/>`;
+        out += `<text x="${tx(0)-10}" y="${PH-PAD_B+18}" text-anchor="middle" font-size="9" fill="#777">隣地</text>`;
+
+        // 斜線（X=0, Y=base から）
+        const slantReachX = totalHorizM;
+        const slantTopH = base + slantReachX * slope;
+        out += `<line x1="${tx(0)}" y1="${ty(base)}" x2="${tx(slantReachX)}" y2="${ty(slantTopH)}" stroke="#c1121f" stroke-width="2"/>`;
+
+        // 立上りの垂直破線
+        out += `<line x1="${tx(0)}" y1="${ty(0)}" x2="${tx(0)}" y2="${ty(base)}" stroke="#c1121f" stroke-width="1.5" stroke-dasharray="4,2"/>`;
+        out += `<text x="${tx(0)}-3" y="${ty(base/2)}" font-size="9" fill="#c1121f" text-anchor="end">${base}m</text>`;
+
+        // 勾配ラベル
+        const labelXm = buildOffsetM + buildWidthM * 0.3;
+        const labelYm = base + labelXm * slope + 1;
+        out += `<text x="${tx(labelXm)}" y="${ty(labelYm)}" font-size="10" fill="#c1121f" transform="rotate(${-Math.atan(slope * scaleV / scaleH) * 180 / Math.PI},${tx(labelXm)},${ty(labelYm)})">北側斜線 1:1.25</text>`;
+
+        // 建物（青破線）
+        const bx1 = tx(buildOffsetM);
+        const bx2 = tx(buildOffsetM + buildWidthM);
+        const by1 = ty(planHeight);
+        const by2 = ty(0);
+        out += `<rect x="${bx1}" y="${by1}" width="${bx2-bx1}" height="${by2-by1}" fill="rgba(100,160,230,0.12)" stroke="#4a90d9" stroke-width="1.5" stroke-dasharray="6,3"/>`;
+
+        // 建物高さ寸法
+        out += `<line x1="${bx2+6}" y1="${by2}" x2="${bx2+6}" y2="${by1}" stroke="#333" stroke-width="1"/>`;
+        out += `<line x1="${bx2+3}" y1="${by2}" x2="${bx2+9}" y2="${by2}" stroke="#333" stroke-width="1"/>`;
+        out += `<line x1="${bx2+3}" y1="${by1}" x2="${bx2+9}" y2="${by1}" stroke="#333" stroke-width="1"/>`;
+        out += `<text x="${bx2+10}" y="${(by1+by2)/2+4}" font-size="10" fill="#333">H=${planHeight}m</text>`;
+
+        // 制限高さ（建物北面の位置）
+        const northLimit = base + buildOffsetM * slope;
+        const ok = planHeight <= northLimit;
+        const judgeColor = ok ? '#2d6a4f' : '#c1121f';
+        const judgeText  = ok ? `✓ 適合 (制限${northLimit.toFixed(1)}m)` : `✗ 超過 (制限${northLimit.toFixed(1)}m)`;
+        out += `<text x="${ox+PW/2}" y="${PH-10}" text-anchor="middle" font-size="10" fill="${judgeColor}" font-weight="bold">${judgeText}</text>`;
+
+        // 制限高さの水平線（点線）
+        out += `<line x1="${bx1}" y1="${ty(northLimit)}" x2="${bx2+14}" y2="${ty(northLimit)}" stroke="#c1121f" stroke-width="1" stroke-dasharray="4,2"/>`;
+        out += `<text x="${bx1-2}" y="${ty(northLimit)-3}" font-size="9" fill="#c1121f" text-anchor="end">制限 ${northLimit.toFixed(1)}m</text>`;
+    }
+
+    // ── 矢印マーカー（共通）
+    const arrowDef = `<defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#555"/></marker></defs>`;
+
+    return arrowDef + out;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1124,14 +1646,21 @@ function buildFireSection(fireZone, structure) {
 // ══════════════════════════════════════════════════════════
 //  特記事項生成
 // ══════════════════════════════════════════════════════════
-function buildLegalNotes(z, roadWidth, isCorner, roadFarLimit, baseFar, planHeight) {
+function buildLegalNotes(z, roadWidth, isCorner, roadFarLimit, baseFar, planHeight, isMulti, zones) {
     const notes = [];
     notes.push(`<strong>■ 容積率制限</strong>：前面道路幅員 ${roadWidth} m による道路容積率 ${roadFarLimit.toFixed(0)}% が適用されます（法52条2項）。`);
     if (isCorner) notes.push(`<strong>■ 角地緩和</strong>：各自治体の条例（角地の角度・長さ条件等）を満たす必要があります（法53条3項）。`);
-    if (z.absoluteHeight) notes.push(`<strong>■ 絶対高さ制限</strong>：${z.name}は10m または 12m の制限があります（法55条）。計画前に特定行政庁の指定高さをご確認ください。`);
+    if (z.absoluteHeight) notes.push(`<strong>■ 絶対高さ制限（要確認）</strong>：${z.name}は10m または 12m の制限があります（法55条）。実際の制限値は都市計画または特定行政庁の指定によって定まるため、<strong>計画前に必ず特定行政庁へご確認ください</strong>。`);
     if (z.shadowReg) notes.push(`<strong>■ 日影規制</strong>：条例により規制時間・対象建築物が異なります。高さ10m超の場合は特に要確認（法56条の2）。`);
+    if (isMulti && zones) {
+        notes.push(`<strong>■ 複数用途地域（法91条・法52条7項）</strong>：<br>` +
+            `　用途制限 → 面積の大きい地域（${zones.sort((a,b)=>b.area-a.area)[0].z.name}）を敷地全体に適用（法91条）<br>` +
+            `　建ぺい率・容積率 → 各地域の面積按分による加重平均で算定（法53条2項・法52条7項）<br>` +
+            `　高さ制限（斜線・絶対高さ）→ 用途境界線をもって各ゾーンにそれぞれの制限が適用（法56条）`);
+    } else {
+        notes.push(`<strong>■ 複数用途地域</strong>：敷地が複数の用途地域にまたがる場合、各部分の制限が個別に適用されます（法91条）。`);
+    }
     notes.push(`<strong>■ 地区計画・条例</strong>：地区計画・建築協定・景観条例等により、建ぺい率・容積率・高さ・意匠等に上乗せ規制がある場合があります（都計法58条の2）。`);
-    notes.push(`<strong>■ 複数用途地域</strong>：敷地が複数の用途地域にまたがる場合、各部分の制限が個別に適用されます（法91条）。`);
     notes.push(`<strong>■ 総合設計制度</strong>：公開空地の確保等により容積率の割増が受けられる場合があります（法59条の2）。`);
     notes.push(`<strong>■ 確認申請</strong>：本書はあくまで概算です。実施設計前に特定行政庁または指定確認検査機関への事前相談を推奨します。`);
     document.getElementById('legalNotes').innerHTML = notes.join('<br>');
